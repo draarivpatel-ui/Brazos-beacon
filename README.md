@@ -118,11 +118,10 @@ Skip link, ARIA live regions for the level and status messages, `aria-pressed` t
 
 ## What's next
 
-- Push alerts (Web Push / PWA) when *your* level goes up, not the whole county's.
+- Push alerts (Web Push / PWA) when *your* saved spot's level goes up, not the whole county's (needs a small server, which this no-backend project avoids for now).
 - Show the inundation map NOAA publishes for forecast flood stages.
 - Add Harris County Flood Control District gauges and TxDOT road closures (DriveTexas).
 - Vietnamese, Chinese, Hindi and Urdu strings (all widely spoken in Fort Bend).
-- Web Push alerts when your saved spot's level goes up.
 
 ## Disclaimer
 
