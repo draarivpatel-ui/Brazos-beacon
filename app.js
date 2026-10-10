@@ -34,6 +34,7 @@
   var DEMO_LOC = { lat: 29.5862, lon: -95.7655, label: 'Richmond · Brazos floodplain' };
   var state = { lang: 'en', lat: 29.6197, lon: -95.6349, label: 'Sugar Land', demo: false, demoNow: DEMO_CREST, data: null, selected: null, runId: 0, series: {}, timer: null, playing: null };
   var map, layers = {};
+  var SNAP_KEY = 'beacon.snapshot.v1';
 
   // ---------- helpers ----------
   function t(key) { var v = I[state.lang][key]; return v == null ? I.en[key] : v; }
@@ -163,6 +164,17 @@
     $('replayTime').textContent = rt; $('replay').setAttribute('aria-valuetext', rt);
   }
 
+  // ---------- offline snapshot (last good result for this spot, kept only in this browser) ----------
+  function saveSnapshot(d, lat, lon) {
+    try {
+      var copy = JSON.parse(JSON.stringify(d)); delete copy.offlineAt; delete copy.offlineAge;
+      var s = JSON.stringify({ lat: lat, lon: lon, label: state.label, savedAt: d.fetched, data: copy });
+      if (s.length > 1.5e6) { copy.near = []; s = JSON.stringify({ lat: lat, lon: lon, label: state.label, savedAt: d.fetched, data: copy }); }
+      localStorage.setItem(SNAP_KEY, s);
+    } catch (e) { /* private mode or storage full: live data still works */ }
+  }
+  function loadSnapshot() { try { return JSON.parse(localStorage.getItem(SNAP_KEY) || 'null'); } catch (e) { return null; } }
+
   // ---------- main run ----------
   function run(lat, lon, label) {
     var id = ++state.runId;
@@ -193,11 +205,18 @@
       if (!state.demo && d.wx && d.wx.city && (!label || label === 'here' || /^-?\d+\.\d+, -?\d+\.\d+$/.test(label))) {
         state.label = d.wx.city; $('placeName').textContent = state.label; updateURL();
       }
+      if (!state.demo) {
+        if (!(d.alerts || d.gauges || d.wx)) {
+          var snap = loadSnapshot(), use = L_.snapshotUsable(snap, lat, lon, Date.now());
+          if (use.ok) { d = snap.data; d.offlineAt = snap.savedAt; d.offlineAge = use.ageH; }
+        }
+      }
       state.data = d;
       if (state.demo) {
         recomputeDemo();
       } else {
         var missing = [];
+        if (d.offlineAt) { render(); if (state.selected) selectGauge(state.selected); msg(fmt(t('offline_snap_msg'), { time: fmtTime(d.offlineAt) }), true); return; }
         if (!d.alerts) missing.push('alerts'); if (!d.gauges) missing.push('rivers'); if (!d.wx) missing.push('weather');
         d.risk = L_.overallRisk({ alerts: d.alerts || [], gauges: L_.riskGauges(d.gauges || [], d.zone.info, RISK_KM),
           maxHeatIndex: d.wx ? d.wx.maxHI : null, rain24: d.wx ? d.wx.rain24 : null, missing: missing });
@@ -205,6 +224,7 @@
         if (!keep) state.selected = d.gauges && d.gauges.length ? (d.gauges.filter(function (g) { return g.cats; })[0] || d.gauges[0]).lid : null;
         render();
         if (state.selected) selectGauge(state.selected); else $('chartWrap').hidden = true;
+        saveSnapshot(d, lat, lon);
       }
       var errs = res.filter(function (r) { return !r.ok; }).length;
       msg(!inArea(lat, lon) ? t('outside') : errs === res.length ? t('offline') : '', errs === res.length);
@@ -225,6 +245,8 @@
     $('lvlDesc').textContent = unsure ? fmt(t('incomplete_desc'), { list: missingTxt })
       : t('level_desc')[lv] + (risk.incomplete ? ' ' + fmt(t('incomplete_note'), { list: missingTxt }) : '');
     $('lvlLabel').textContent = t('level_word');
+    var on = $('offlineNote'); on.hidden = !d.offlineAt;
+    if (d.offlineAt) on.textContent = fmt(t('offline_snap'), { time: fmtTime(d.offlineAt), age: d.offlineAge < 1 ? t('age_lt1') : fmt(t('age_h'), { n: num(d.offlineAge) }) });
     var hz = t('hz'), catNames = t('cat');
     $('drivers').innerHTML = risk.drivers.length ? risk.drivers.slice(0, 4).map(function (x) {
       var extra = x.hazard === 'heat' ? ' ' + x.label + '°F' : x.hazard === 'rain' ? ' ' + num(x.label) + ' in' : x.label ? ': ' + x.label : '';
@@ -589,6 +611,8 @@
       if (!document.hidden && !state.demo && state.data && Date.now() - state.data.fetched > REFRESH_MS) run(state.lat, state.lon, state.label);
     });
     var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (state.data && state.selected) selectGauge(state.selected); }, 200); });
+    window.addEventListener('online', function () { if (!state.demo && state.data && state.data.offlineAt) run(state.lat, state.lon, state.label); });
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(function () {});
     scheduleRefresh();
     run(state.lat, state.lon, state.label);
   }
