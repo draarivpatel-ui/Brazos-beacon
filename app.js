@@ -191,7 +191,7 @@
         near: res[4].ok ? res[4].v : [], fetched: Date.now(), now: now
       };
       if (!state.demo && d.wx && d.wx.city && (!label || label === 'here' || /^-?\d+\.\d+, -?\d+\.\d+$/.test(label))) {
-        state.label = d.wx.city; $('placeName').textContent = state.label;
+        state.label = d.wx.city; $('placeName').textContent = state.label; updateURL();
       }
       state.data = d;
       if (state.demo) {
@@ -411,6 +411,76 @@
     });
   }
 
+
+  // ---------- printable family flood plan ----------
+  var PLAN_KEY = 'brazosBeaconPlan';
+  function planLoad() { try { return JSON.parse(localStorage.getItem(PLAN_KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function planSave() {
+    var o = {}; Array.prototype.forEach.call($('planForm').elements, function (el) { if (el.name) o[el.name] = el.value.slice(0, 300); });
+    try { localStorage.setItem(PLAN_KEY, JSON.stringify(o)); } catch (e) { /* private mode: plan still prints */ }
+    return o;
+  }
+  function planQR(url) {
+    try {
+      if (!window.qrcode) return '';
+      var q = window.qrcode(0, 'M'); q.addData(url); q.make();
+      return q.createSvgTag({ cellSize: 3, margin: 2, scalable: true, alt: t('ps_live') });
+    } catch (e) { return ''; }
+  }
+  function buildPlanSheet(f) {
+    var d = state.data || {}, zi = (d.zone && d.zone.info) || L_.floodZoneInfo(null), zt = t('zone')[zi.key] || t('zone').unknown;
+    var p = L_.familyPlan(zi, d.gauges, RISK_KM), risk = d.risk, lv = risk ? risk.level : null, unsure = risk && risk.incomplete && lv === 0;
+    var place = state.label === 'here' ? t('your_location') : state.label;
+    var url = location.href;
+    var row = function (k, v) { return '<div class="ps-field"><b>' + esc(t(k)) + '</b><span>' + (v ? esc(v).replace(/\n/g, '<br>') : '&nbsp;') + '</span></div>'; };
+    var river = p.gauge
+      ? '<p><b>' + esc(fmt(t('ps_river_line'), { name: p.gauge.name, mi: num(L_.kmToMi(p.gauge.km)), fs: num(p.gauge.flood) })) + '</b><br>' +
+        esc(fmt(t('ps_stages'), { a: p.gauge.action != null ? num(p.gauge.action) : '–', m: p.gauge.moderate != null ? num(p.gauge.moderate) : '–', j: p.gauge.major != null ? num(p.gauge.major) : '–' })) +
+        '<br>water.noaa.gov/gauges/' + esc(p.gauge.lid) + '</p>'
+      : '<p>' + esc(t('ps_river_none')) + '</p>';
+    var lvTxt = !risk ? '–' : unsure ? t('incomplete_name') : lv + ' · ' + t('level_names')[lv];
+    $('planSheet').innerHTML =
+      '<header class="ps-head"><div><p class="ps-brand">◉ Brazos Beacon</p><h1>' + esc(t('ps_title')) + '</h1>' +
+        '<p>' + esc(t('ps_for')) + ': <b>' + esc(place) + '</b> (' + state.lat.toFixed(4) + ', ' + state.lon.toFixed(4) + ')<br>' +
+        esc(t('ps_printed')) + ': ' + esc(fmtTime(Date.now(), true)) + ' CT</p></div>' +
+        '<div class="ps-qr">' + planQR(url) + '<small>' + esc(t('ps_live')) + '</small></div></header>' +
+      '<section class="ps-row"><div class="ps-box"><h2>' + esc(t('ps_zone')) + '</h2><p><b>' + esc(zt[0].replace('{z}', zi.zone || '')) + '</b></p><p>' + esc(zt[1]) + '</p>' +
+        p.extras.map(function (k) { return '<p class="ps-warn">' + esc(t('ps_extra')[k]) + '</p>'; }).join('') + '</div>' +
+      '<div class="ps-box"><h2>' + esc(t('ps_level')) + '</h2><p class="ps-lvl">' + esc(lvTxt) + '</p><p class="ps-small">' + esc(t('ps_level_note')) + '</p>' +
+        '<h2>' + esc(t('ps_river')) + '</h2>' + river + '</div></section>' +
+      '<section class="ps-box"><h2>' + esc(t('ps_family')) + '</h2><div class="ps-fields">' +
+        row('pf_people', f.people) + row('pf_contact', f.contact) + row('pf_meet_near', f.meetNear) + row('pf_meet_far', f.meetFar) +
+        row('pf_evac', f.evac) + row('pf_needs', f.needs) + row('pf_pets', f.pets) + '</div></section>' +
+      '<section class="ps-row"><div class="ps-box"><h2>' + esc(t('ps_when')) + '</h2><ul class="ps-steps">' +
+        t('ps_steps').map(function (x) { return '<li><b>' + esc(x[0]) + ':</b> ' + esc(x[1]) + '</li>'; }).join('') + '</ul></div>' +
+      '<div class="ps-box"><h2>' + esc(t('ps_numbers')) + '</h2><table class="ps-table ps-nums">' +
+        t('ps_num_items').map(function (x) { return '<tr><th scope="row">' + esc(x[0]) + '</th><td><b>' + esc(x[1]) + '</b></td></tr>'; }).join('') + '</table></div></section>' +
+      '<section class="ps-box"><h2>' + esc(t('ps_bag')) + '</h2><ul class="ps-check">' +
+        t('ps_bag_items').map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></section>' +
+      '<p class="ps-small ps-url">' + esc(t('ps_live')) + ': ' + esc(url) + '</p>' +
+      '<footer class="ps-foot">' + esc(t('ps_foot')) + '</footer>';
+  }
+  function setupPlan() {
+    var dlg = $('planDlg'), form = $('planForm'), saved = planLoad();
+    Array.prototype.forEach.call(form.elements, function (el) { if (el.name && saved[el.name]) el.value = saved[el.name]; });
+    form.addEventListener('input', planSave);
+    $('planBtn').addEventListener('click', function () {
+      if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+      var first = form.querySelector('textarea, input'); if (first) first.focus();
+    });
+    $('planClear').addEventListener('click', function () {
+      Array.prototype.forEach.call(form.elements, function (el) { if (el.name) el.value = ''; });
+      try { localStorage.removeItem(PLAN_KEY); } catch (e) { }
+    });
+    $('planPrint').addEventListener('click', function () {
+      buildPlanSheet(planSave());
+      document.body.classList.add('print-plan');
+      if (dlg.open && dlg.close) dlg.close();
+      setTimeout(function () { window.print(); }, 50);
+    });
+    window.addEventListener('afterprint', function () { document.body.classList.remove('print-plan'); });
+  }
+
   // ---------- inputs ----------
   function geocode(q) {
     return getJSON(API.geocode(q)).then(function (r) {
@@ -459,6 +529,7 @@
     $('addr').placeholder = t('search_ph');
     $('disclaimer').textContent = t('disclaimer');
     $('demoBtn').textContent = state.demo ? t('demo_exit') : t('demo_btn');
+    $('planBtn').hidden = state.demo;
     $('demoBanner').hidden = !state.demo; $('demoText').textContent = t('demo_banner');
     $('playBtn').textContent = state.playing ? t('pause') : t('play');
     $('map').setAttribute('aria-label', t('map_label'));
@@ -479,6 +550,7 @@
     else if (state.demo) { state.lat = DEMO_LOC.lat; state.lon = DEMO_LOC.lon; state.label = DEMO_LOC.label; }
     initMap();
     setupReplay();
+    setupPlan();
     applyLang();
 
     $('searchForm').addEventListener('submit', function (e) {
