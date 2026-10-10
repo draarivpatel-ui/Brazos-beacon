@@ -112,4 +112,15 @@ t('family plan picks nearest gauge with a flood stage inside the risk radius', (
   assert.deepStrictEqual(L.familyPlan(null, null, 15), { gauge: null, sfha: false, extras: [] });
   assert(L.familyPlan(L.floodZoneInfo('AE', 'FLOODWAY', 'T'), [], 15).extras.includes('leave_early'));
 });
+t('offline snapshot only stands in for the same spot while recent', () => {
+  const now = Date.UTC(2026, 9, 10, 20);
+  const snap = { lat: 29.6197, lon: -95.6349, savedAt: now - 3 * 36e5 };
+  assert.deepStrictEqual(L.snapshotUsable(snap, 29.6197, -95.6349, now), { ok: true, ageH: 3 });
+  assert.strictEqual(L.snapshotUsable(snap, 29.6250, -95.6349, now).ok, true, '~0.6 km away still counts');
+  assert.strictEqual(L.snapshotUsable(snap, 29.5822, -95.7608, now).reason, 'far', 'Richmond is not Sugar Land');
+  assert.strictEqual(L.snapshotUsable({ ...snap, savedAt: now - 80 * 36e5 }, 29.6197, -95.6349, now).reason, 'old');
+  assert.strictEqual(L.snapshotUsable({ ...snap, savedAt: now + 36e5 }, 29.6197, -95.6349, now).reason, 'old', 'future clock is not trusted');
+  assert.strictEqual(L.snapshotUsable(null, 29.6, -95.6, now).reason, 'none');
+  assert.strictEqual(L.snapshotUsable({ lat: 29.6 }, 29.6, -95.6, now).reason, 'none');
+});
 console.log(`\n${n} tests passed`);
