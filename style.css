@@ -187,3 +187,5 @@ main { padding: 8px clamp(16px, 4vw, 40px) 24px; }
 .ps-field b { display: block; font-size: 8.5pt; }
 .ps-field span { display: block; min-height: 1.5em; border-bottom: 1px solid #999; }
 .ps-nums { font-size: 9pt; }
+
+.offline-note { margin: 10px 0 0; padding: 8px 12px; border-left: 5px solid #ffb703; background: #fff; color: var(--ink); font-size: 14px; border-radius: 6px; }
