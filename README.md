@@ -36,6 +36,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 - **Active NWS watches and warnings** for that exact point, with "until" times.
 - **Next 72 hours:** "feels like" now, max heat index, and forecast rain totals for 24 h and 72 h.
 - **A personalized action checklist** that changes with the level and your zone (flood insurance's 30-day waiting period if you're in a high-risk zone, "Turn Around, Don't Drown", heat safety, evacuation readiness).
+- **Works when the signal drops:** it can be installed to a phone's home screen, and a service worker keeps the app itself (page, scripts, map library) available offline. Each successful check is saved in your browser; if you open it later with no connection and no agency answers, it shows that last check for the same spot, with a clear "Offline: last saw here on … (2 h ago)" note, instead of a blank screen. It never uses a saved check from more than 1.5 km away or older than 72 hours, and live agency data is never served from the cache.
 - **Fort Bend resources:** FBC Alert sign-up (text `FBCAlert` to `888777`), Ready Fort Bend, county Homeland Security & Emergency Management (281-342-6185, non-emergency), FEMA Map Service Center, Texas 2-1-1.
 - **English and Spanish**, auto-detected from the browser, switchable anytime (NWS alert text itself stays in English, and the app says so).
 - **Printable family flood plan.** One tap builds a one-page, fridge-ready plan for that exact spot (English or Spanish): the FEMA zone and what it means, the Beacon level when printed, the nearest NOAA river gauge with its action / flood / moderate / major stages, a "when to do what" ladder for levels 2-4, a Ready.gov go-bag checklist, Fort Bend key numbers, and a QR code back to the live page. The family fills in who lives there, an out-of-area contact, two meeting places, where they would evacuate, medicines and pets (or leaves blanks to write by hand). Those answers are kept only in the browser's localStorage and are never sent anywhere. Print it or save it as a PDF.
@@ -89,7 +90,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 git clone https://github.com/draarivpatel-ui/Brazos-beacon.git
 cd Brazos-beacon
 python3 -m http.server 8000      # then open http://localhost:8000
-node logic.test.js               # 28 unit tests for the risk logic
+node logic.test.js               # 29 unit tests for the risk logic
 ```
 
 ## Project structure
@@ -112,8 +113,8 @@ Skip link, ARIA live regions for the level and status messages, `aria-pressed` t
 
 ## Testing
 
-- `node logic.test.js`: 28 unit tests (flood categories incl. missing/-9999 values, feet-to-flood-stage, forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, checklist escalation, and the family plan choosing the nearest in-range gauge that has an official flood stage).
-- During development the app was also run headless (jsdom and Chromium) against the live APIs, with every API failing, with only NWS alerts failing, through the Harvey replay at several moments, in Spanish, and at phone width (390 px). The deployed site at aariv.me was checked the same way (1280 px and 390 px, no console errors or failed API requests from the real domain).
+- `node logic.test.js`: 29 unit tests (flood categories incl. missing/-9999 values, feet-to-flood-stage, forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, checklist escalation, the family plan choosing the nearest in-range gauge that has an official flood stage, and the offline fallback only reusing a saved check for the same spot (within 1.5 km) from the last 72 hours).
+- During development the app was also run headless (jsdom and Chromium) against the live APIs, with every API failing, with only NWS alerts failing, fully offline (service worker serving the app, the saved last check at the same spot, no saved check used for a different spot), through the Harvey replay at several moments, in Spanish, and at phone width (390 px). The deployed site at aariv.me was checked the same way (1280 px and 390 px, no console errors or failed API requests from the real domain).
 
 ## What's next
 
@@ -121,7 +122,7 @@ Skip link, ARIA live regions for the level and status messages, `aria-pressed` t
 - Show the inundation map NOAA publishes for forecast flood stages.
 - Add Harris County Flood Control District gauges and TxDOT road closures (DriveTexas).
 - Vietnamese, Chinese, Hindi and Urdu strings (all widely spoken in Fort Bend).
-- An offline-first PWA so the checklist still works when power and data fail.
+- Web Push alerts when your saved spot's level goes up.
 
 ## Disclaimer
 
