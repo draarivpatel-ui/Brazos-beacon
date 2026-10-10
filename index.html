@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brazos Beacon · Fort Bend flood & heat risk</title>
+  <meta name="description" content="Live, plain-language flood and heat risk for any address in Fort Bend County and the Houston area, built on free NOAA, NWS, and FEMA data.">
+  <meta name="theme-color" content="#0b2a3c">
+  <meta property="og:title" content="Brazos Beacon · Fort Bend flood & heat risk">
+  <meta property="og:description" content="One 0-4 risk level for any Fort Bend County address, the reason why, and what to do next. English and Spanish. Built on NOAA, NWS and FEMA data.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23ffb703'/></svg>">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to results</a>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◉</span>
+      <div>
+        <h1>Brazos Beacon</h1>
+        <p class="tag" data-i18n="tagline"></p>
+      </div>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" lang="en" aria-pressed="true" aria-label="English">EN</button>
+      <button type="button" data-lang="es" lang="es" aria-pressed="false" aria-label="Español">ES</button>
+    </div>
+  </header>
+
+  <div id="demoBanner" class="demo-banner" hidden>
+    <p id="demoText"></p>
+    <div class="replay">
+      <button type="button" id="playBtn" aria-pressed="false"></button>
+      <button type="button" id="crestBtn" data-i18n="crest_btn"></button>
+      <label for="replay" class="sr" data-i18n="replay_lbl"></label>
+      <input type="range" id="replay">
+      <output id="replayTime" for="replay" aria-live="off"></output>
+    </div>
+  </div>
+
+  <section class="search" aria-label="Choose a location">
+    <form id="searchForm" autocomplete="on">
+      <label for="addr" class="sr" data-i18n="addr_label"></label>
+      <input id="addr" name="addr" type="search" autocomplete="street-address" enterkeyhint="search" required>
+      <button type="submit" class="primary" data-i18n="search_btn"></button>
+      <button type="button" id="locBtn" data-i18n="locate_btn"></button>
+    </form>
+    <div class="presets">
+      <span data-i18n="or_pick"></span>
+      <button type="button" class="chip" data-ll="29.6197,-95.6349">Sugar Land</button>
+      <button type="button" class="chip" data-ll="29.6186,-95.5377">Missouri City</button>
+      <button type="button" class="chip" data-ll="29.5822,-95.7608">Richmond</button>
+      <button type="button" class="chip" data-ll="29.5572,-95.8086">Rosenberg</button>
+      <button type="button" class="chip" data-ll="29.6930,-95.8991">Fulshear</button>
+      <button type="button" class="chip" data-ll="29.6165,-95.5577">Stafford</button>
+      <button type="button" class="chip" data-ll="29.3989,-95.8377">Needville</button>
+      <button type="button" class="chip" data-ll="29.7858,-95.8245">Katy</button>
+      <button type="button" class="chip demo" id="demoBtn" data-i18n="demo_btn"></button>
+    </div>
+    <p id="msg" class="msg" role="status" aria-live="polite"></p>
+  </section>
+
+  <main id="main">
+    <section id="hero" class="hero lvl-l" aria-live="polite" aria-atomic="true">
+      <div class="dial"><span class="sr" id="lvlLabel"></span><span id="lvlNum">–</span></div>
+      <div class="hero-txt">
+        <p class="place" id="placeName">Fort Bend County, TX</p>
+        <h2 id="lvlName" data-i18n="loading"></h2>
+        <p id="lvlDesc"></p>
+        <ul id="drivers" class="drivers"></ul>
+      </div>
+      <button type="button" id="shareBtn" class="ghost" data-i18n="share"></button>
+    </section>
+
+    <div class="grid">
+      <section class="card c-map" aria-label="Map">
+        <div id="map" role="region" aria-label="Map"></div>
+      </section>
+
+      <section class="card c-zone">
+        <h3 data-i18n="card_zone"></h3>
+        <div id="zone" class="zone"></div>
+      </section>
+
+      <section class="card c-wx">
+        <h3 data-i18n="card_wx"></h3>
+        <div id="wx" class="wx"></div>
+      </section>
+
+      <section class="card c-rivers">
+        <h3 data-i18n="card_rivers"></h3>
+        <div id="rivers" class="rivers"></div>
+        <figure class="chart-wrap" id="chartWrap" hidden>
+          <figcaption id="chartTitle"></figcaption>
+          <svg id="chart" viewBox="0 0 640 220" role="img" aria-label=""></svg>
+          <a id="gaugeLink" class="fine" href="https://water.noaa.gov/" target="_blank" rel="noopener"></a>
+        </figure>
+      </section>
+
+      <section class="card c-alerts">
+        <h3 data-i18n="card_alerts"></h3>
+        <div id="alerts" aria-live="polite"></div>
+      </section>
+
+      <section class="card c-actions">
+        <h3 data-i18n="card_actions"></h3>
+        <ol id="actions" class="actions"></ol>
+      </section>
+
+      <section class="card c-help">
+        <h3 data-i18n="card_help"></h3>
+        <ul id="help" class="help"></ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <p id="disclaimer"></p>
+    <p class="src"><span data-i18n="sources"></span>:
+      <a href="https://water.noaa.gov/about/api" target="_blank" rel="noopener">NOAA National Water Prediction Service</a> ·
+      <a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">National Weather Service API</a> ·
+      <a href="https://hazards.fema.gov/femaportal/wps/portal/NFHLWMS" target="_blank" rel="noopener">FEMA National Flood Hazard Layer</a> ·
+      <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> ·
+      <a href="https://waterdata.usgs.gov/monitoring-location/08114000/" target="_blank" rel="noopener">USGS 08114000 (Harvey replay)</a> ·
+      Esri World Geocoder</p>
+    <p class="fine"><a href="https://github.com/draarivpatel-ui/Brazos-beacon" target="_blank" rel="noopener">GitHub</a> · WarriorHacks 2.0 · Aariv Patel</p>
+    <p id="stamp" class="stamp"></p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="logic.js"></script>
+  <script src="i18n.js"></script>
+  <script src="demo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
