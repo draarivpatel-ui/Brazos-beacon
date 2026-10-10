@@ -101,4 +101,15 @@ t('checklist escalates', () => {
   assert(hot.includes('check_elderly') && hot.includes('water'));
   assert.strictEqual(new Set(bad).size, bad.length, 'no duplicates');
 });
+t('family plan picks nearest gauge with a flood stage inside the risk radius', () => {
+  const c = { action: { stage: 40 }, minor: { stage: 45 }, moderate: { stage: 48 }, major: { stage: 50 } };
+  const gs = [{ lid: 'FAR', name: 'Far', km: 30, cats: c }, { lid: 'NOFS', name: 'No stage', km: 2, cats: { minor: { stage: -9999 } } },
+    { lid: 'B', name: 'Second', km: 8, cats: c }, { lid: 'A', name: 'Nearest', km: 5, cats: c }];
+  const p = L.familyPlan(L.floodZoneInfo('AE', null, 'T'), gs, 15);
+  assert.strictEqual(p.gauge.lid, 'A'); assert.strictEqual(p.gauge.flood, 45); assert.strictEqual(p.gauge.major, 50);
+  assert(p.sfha && p.extras.includes('insurance'));
+  assert.strictEqual(L.familyPlan(L.floodZoneInfo('X', '', 'F'), [gs[0], gs[1]], 15).gauge, null);
+  assert.deepStrictEqual(L.familyPlan(null, null, 15), { gauge: null, sfha: false, extras: [] });
+  assert(L.familyPlan(L.floodZoneInfo('AE', 'FLOODWAY', 'T'), [], 15).extras.includes('leave_early'));
+});
 console.log(`\n${n} tests passed`);
