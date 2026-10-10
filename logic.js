@@ -246,6 +246,24 @@
 
   // Harvey replay: the gauge as it stood at `nowMs`, using only data up to then plus what the river
   // actually did over the next 48 h as a stand-in for the forecast. series = [[ms, ft], ...].
+
+  // Printable family flood plan: which nearby river gauge to watch and which extra steps apply.
+  // Picks the nearest gauge within maxKm that has an official flood stage (so the printed numbers mean something).
+  function familyPlan(zoneInfo, gauges, maxKm) {
+    var st = function (c, k) { return c && c[k] && c[k].stage > -900 ? c[k].stage : null; };
+    var g = (gauges || []).filter(function (x) { return x && x.km != null && x.km <= maxKm && st(x.cats, 'minor') != null; })
+      .sort(function (a, b) { return a.km - b.km; })[0] || null;
+    var extras = [];
+    if (zoneInfo && zoneInfo.key === 'floodway') extras.push('leave_early');
+    if (zoneInfo && zoneInfo.sfha) extras.push('insurance');
+    if (zoneInfo && zoneInfo.key === 'moderate') extras.push('moderate_note');
+    return {
+      gauge: g ? { lid: g.lid, name: g.name, km: g.km, action: st(g.cats, 'action'), flood: st(g.cats, 'minor'),
+        moderate: st(g.cats, 'moderate'), major: st(g.cats, 'major') } : null,
+      sfha: !!(zoneInfo && zoneInfo.sfha), extras: extras
+    };
+  }
+
   function replayAt(series, cats, nowMs) {
     var past = series.filter(function (p) { return p[0] <= nowMs; });
     if (!past.length) past = [series[0]];
@@ -261,6 +279,6 @@
     hourlyHeatIndex: hourlyHeatIndex, CAT_ORDER: CAT_ORDER, riverCategory: riverCategory, riverLevel: riverLevel,
     alertLevel: alertLevel, alertHazard: alertHazard, overallRisk: overallRisk,
     distanceKm: distanceKm, trendFtPerHour: trendFtPerHour, floodZoneInfo: floodZoneInfo,
-    parseValidTime: parseValidTime, rainInches: rainInches, rainLevel: rainLevel, buildChecklist: buildChecklist };
+    parseValidTime: parseValidTime, rainInches: rainInches, rainLevel: rainLevel, buildChecklist: buildChecklist, familyPlan: familyPlan };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BeaconLogic = api;
 })(this);
