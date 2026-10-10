@@ -4,8 +4,8 @@
 
 Built for **WarriorHacks 2.0** (Hackathon track): *"Create a project that solves an issue in your community, county, state, or nation."*
 
-**Live demo:** https://draarivpatel-ui.github.io/Brazos-beacon/ (available once GitHub Pages is on)
-**Try the Harvey replay:** https://draarivpatel-ui.github.io/Brazos-beacon/?demo=harvey
+**Live demo:** https://aariv.me/Brazos-beacon/
+**Try the Harvey replay:** https://aariv.me/Brazos-beacon/?demo=harvey
 
 ---
 
@@ -38,6 +38,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 - **A personalized action checklist** that changes with the level and your zone (flood insurance's 30-day waiting period if you're in a high-risk zone, "Turn Around, Don't Drown", heat safety, evacuation readiness).
 - **Fort Bend resources:** FBC Alert sign-up (text `FBCAlert` to `888777`), Ready Fort Bend, county Homeland Security & Emergency Management (281-342-6185, non-emergency), FEMA Map Service Center, Texas 2-1-1.
 - **English and Spanish**, auto-detected from the browser, switchable anytime (NWS alert text itself stays in English, and the app says so).
+- **Printable family flood plan.** One tap builds a one-page, fridge-ready plan for that exact spot (English or Spanish): the FEMA zone and what it means, the Beacon level when printed, the nearest NOAA river gauge with its action / flood / moderate / major stages, a "when to do what" ladder for levels 2-4, a Ready.gov go-bag checklist, Fort Bend key numbers, and a QR code back to the live page. The family fills in who lives there, an out-of-area contact, two meeting places, where they would evacuate, medicines and pets (or leaves blanks to write by hand). Those answers are kept only in the browser's localStorage and are never sent anywhere. Print it or save it as a PDF.
 - **Shareable links** (`?lat=…&lon=…&lang=es`) so a parent can text the exact view to family. Refreshes every 15 minutes while open.
 - **"Replay Harvey" mode with a time slider.** It loads the **real USGS gage record** for the Brazos at Richmond (Aug 24 – Sep 8, 2017) at a point inside the FEMA floodplain. Drag the slider or press **Play the flood** and watch the level climb from *All clear* (Aug 26) to *Danger* as the forecast crest approaches, then fall again. The app only uses readings up to the chosen moment; what the river actually did over the next 48 h stands in for the forecast. The flood warning shown is a clearly labeled re-created example, not an archived NWS product.
 
@@ -88,7 +89,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 git clone https://github.com/draarivpatel-ui/Brazos-beacon.git
 cd Brazos-beacon
 python3 -m http.server 8000      # then open http://localhost:8000
-node logic.test.js               # 27 unit tests for the risk logic
+node logic.test.js               # 28 unit tests for the risk logic
 ```
 
 ## Project structure
@@ -101,6 +102,8 @@ logic.js        pure risk logic (runs in browser and Node)
 logic.test.js   unit tests (node logic.test.js)
 i18n.js         English + Spanish strings
 demo.js         real USGS Harvey 2017 series for the replay mode
+vendor/qrcode.js  QR code generator for the printable plan (qrcode-generator 1.4.4, MIT, Kazuhiko Arase)
+og-image.png    link-preview image
 ```
 
 ## Accessibility
@@ -109,8 +112,8 @@ Skip link, ARIA live regions for the level and status messages, `aria-pressed` t
 
 ## Testing
 
-- `node logic.test.js`: 27 unit tests (flood categories incl. missing/-9999 values, feet-to-flood-stage, forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, checklist escalation).
-- During development the app was also run headless (jsdom and Chromium) against the live APIs, with every API failing, with only NWS alerts failing, through the Harvey replay at several moments, in Spanish, and at phone width (390 px).
+- `node logic.test.js`: 28 unit tests (flood categories incl. missing/-9999 values, feet-to-flood-stage, forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, checklist escalation, and the family plan choosing the nearest in-range gauge that has an official flood stage).
+- During development the app was also run headless (jsdom and Chromium) against the live APIs, with every API failing, with only NWS alerts failing, through the Harvey replay at several moments, in Spanish, and at phone width (390 px). The deployed site at aariv.me was checked the same way (1280 px and 390 px, no console errors or failed API requests from the real domain).
 
 ## What's next
 
