@@ -9,6 +9,13 @@
   <meta property="og:title" content="Brazos Beacon · Fort Bend flood & heat risk">
   <meta property="og:description" content="One 0-4 risk level for any Fort Bend County address, the reason why, and what to do next. English and Spanish. Built on NOAA, NWS and FEMA data.">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://aariv.me/Brazos-beacon/">
+  <meta property="og:image" content="https://aariv.me/Brazos-beacon/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Brazos Beacon: one 0-4 flood and heat risk level for any Fort Bend County address">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://aariv.me/Brazos-beacon/">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23ffb703'/></svg>">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="style.css">
@@ -107,6 +114,7 @@
       <section class="card c-actions">
         <h3 data-i18n="card_actions"></h3>
         <ol id="actions" class="actions"></ol>
+        <button type="button" id="planBtn" class="plan-btn" data-i18n="plan_btn"></button>
       </section>
 
       <section class="card c-help">
@@ -129,7 +137,31 @@
     <p id="stamp" class="stamp"></p>
   </footer>
 
+  <dialog id="planDlg" aria-labelledby="planDlgTitle">
+    <form id="planForm" method="dialog">
+      <h2 id="planDlgTitle" data-i18n="plan_title"></h2>
+      <p class="fine" data-i18n="plan_intro"></p>
+      <div class="plan-fields">
+        <label><span data-i18n="pf_people"></span><textarea name="people" rows="2" maxlength="300"></textarea></label>
+        <label><span data-i18n="pf_contact"></span><input name="contact" maxlength="120"></label>
+        <label><span data-i18n="pf_meet_near"></span><input name="meetNear" maxlength="120"></label>
+        <label><span data-i18n="pf_meet_far"></span><input name="meetFar" maxlength="120"></label>
+        <label><span data-i18n="pf_evac"></span><input name="evac" maxlength="160"></label>
+        <label><span data-i18n="pf_needs"></span><textarea name="needs" rows="2" maxlength="300"></textarea></label>
+        <label><span data-i18n="pf_pets"></span><input name="pets" maxlength="120"></label>
+      </div>
+      <p class="fine" data-i18n="plan_privacy"></p>
+      <div class="plan-actions">
+        <button type="button" id="planPrint" class="primary" data-i18n="plan_print"></button>
+        <button type="button" id="planClear" data-i18n="plan_clear"></button>
+        <button type="submit" value="close" data-i18n="plan_close"></button>
+      </div>
+    </form>
+  </dialog>
+  <article id="planSheet" class="plan-sheet" aria-hidden="true"></article>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="vendor/qrcode.js"></script>
   <script src="logic.js"></script>
   <script src="i18n.js"></script>
   <script src="demo.js"></script>
