@@ -274,7 +274,17 @@
       forecastCategory: peak != null ? riverCategory(peak, cats) : null };
   }
 
-  var api = { replayAt: replayAt, heatIndexF: heatIndexF, heatLevel: heatLevel, heatRiskLevel: heatRiskLevel, feetToFlood: feetToFlood,
+  // Offline fallback: a saved snapshot may stand in for live data only for (nearly) the same spot and only while it is recent.
+  // Returns { ok, ageH, reason } so the UI can say exactly why an old snapshot was or wasn't used.
+  function snapshotUsable(snap, lat, lon, nowMs, maxKm, maxHours) {
+    if (!snap || snap.lat == null || snap.lon == null || !snap.savedAt) return { ok: false, reason: 'none' };
+    var km = distanceKm(snap.lat, snap.lon, lat, lon), ageH = (nowMs - snap.savedAt) / 36e5;
+    if (!(km <= (maxKm || 1.5))) return { ok: false, reason: 'far', ageH: ageH };
+    if (ageH < 0 || ageH > (maxHours || 72)) return { ok: false, reason: 'old', ageH: ageH };
+    return { ok: true, ageH: Math.round(ageH * 10) / 10 };
+  }
+
+  var api = {snapshotUsable: snapshotUsable,  replayAt: replayAt, heatIndexF: heatIndexF, heatLevel: heatLevel, heatRiskLevel: heatRiskLevel, feetToFlood: feetToFlood,
     forecastPeak: forecastPeak, riskGauges: riskGauges, kmToMi: kmToMi, ageHours: ageHours, valueAt: valueAt,
     hourlyHeatIndex: hourlyHeatIndex, CAT_ORDER: CAT_ORDER, riverCategory: riverCategory, riverLevel: riverLevel,
     alertLevel: alertLevel, alertHazard: alertHazard, overallRisk: overallRisk,
