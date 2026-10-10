@@ -136,3 +136,54 @@ main { padding: 8px clamp(16px, 4vw, 40px) 24px; }
   .help { columns: 1; }
   .dial { width: 64px; height: 64px; font-size: 30px; }
 }
+
+/* ---------- printable family flood plan ---------- */
+.plan-btn { margin-top: 6px; width: 100%; padding: 10px 14px; min-height: 44px; border-radius: 10px; border: 1px solid var(--teal); background: #e9f5f6; color: #0a5960; font-weight: 700; }
+.plan-btn:hover { background: #d8eef0; }
+.plan-btn[hidden] { display: none; }
+#planDlg { width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); border: 0; border-radius: var(--radius); padding: 20px; color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+#planDlg::backdrop { background: rgba(11,42,60,.55); }
+#planDlg h2 { margin: 0 0 4px; font-size: 22px; }
+.plan-fields { display: grid; gap: 10px; margin: 12px 0 4px; }
+.plan-fields label { display: grid; gap: 4px; font-size: 14px; font-weight: 600; }
+.plan-fields input, .plan-fields textarea { font: inherit; font-weight: 400; padding: 9px 11px; border: 1px solid #b9c6cd; border-radius: 8px; width: 100%; }
+.plan-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.plan-actions button { padding: 10px 14px; min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
+.plan-actions .primary { background: var(--teal); color: #fff; border-color: var(--teal); font-weight: 700; }
+.plan-sheet { display: none; }
+
+@media print {
+  body.print-plan > *:not(#planSheet) { display: none !important; }
+  body.print-plan { background: #fff; }
+  body.print-plan .plan-sheet { display: block; color: #000; font-size: 9.5pt; line-height: 1.25; }
+  @page { margin: 9mm; }
+}
+.plan-sheet h1 { font-size: 18pt; margin: 0 0 4px; }
+.plan-sheet h2 { font-size: 11pt; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 4px; color: #0b2a3c; }
+.plan-sheet p { margin: 2px 0; }
+.ps-head { display: flex; justify-content: space-between; gap: 16px; border-bottom: 3px solid #0b2a3c; padding-bottom: 6px; margin-bottom: 8px; }
+.ps-nums th { width: 58%; }
+.ps-brand { font-weight: 800; color: #0b2a3c; }
+.ps-qr { text-align: center; flex: none; width: 30mm; }
+.ps-qr svg { width: 27mm; height: 27mm; display: block; margin: 0 auto; }
+.ps-qr small { font-size: 8pt; }
+.ps-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ps-box { border: 1.5px solid #555; border-radius: 6px; padding: 6px 9px; margin-bottom: 8px; break-inside: avoid; }
+.ps-lvl { font-size: 15pt; font-weight: 800; }
+.ps-small { font-size: 9pt; color: #333; }
+.ps-url { word-break: break-all; margin: 0 0 6px !important; }
+.ps-warn { font-weight: 700; border-left: 4px solid #b4500f; padding-left: 6px; margin-top: 6px !important; }
+.ps-table { width: 100%; border-collapse: collapse; }
+.ps-table th { text-align: left; font-weight: 600; width: 45%; padding: 3px 8px 3px 0; vertical-align: top; }
+.ps-table td { padding: 3px 0; border-bottom: 1px solid #999; }
+.ps-table .line { display: block; height: 1.2em; }
+.ps-steps { margin: 0; padding-left: 18px; } .ps-steps li { margin-bottom: 4px; }
+.ps-check { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 16px; }
+.ps-check li { break-inside: avoid; }
+.ps-check li { padding-left: 18px; position: relative; margin-bottom: 1px; }
+.ps-check li::before { content: ''; position: absolute; left: 0; top: .2em; width: 11px; height: 11px; border: 1.5px solid #000; }
+.ps-foot { font-size: 8.5pt; color: #333; border-top: 1px solid #999; padding-top: 6px; }
+.ps-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+.ps-field b { display: block; font-size: 8.5pt; }
+.ps-field span { display: block; min-height: 1.5em; border-bottom: 1px solid #999; }
+.ps-nums { font-size: 9pt; }
