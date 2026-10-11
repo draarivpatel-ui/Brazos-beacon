@@ -274,6 +274,28 @@
       forecastCategory: peak != null ? riverCategory(peak, cats) : null };
   }
 
+  // Replay lead time: for each Beacon level, the first replay moment the level was reached BEFORE the crest,
+  // two ways. "observed" uses only readings up to that moment (no look-ahead at all, a true backtest).
+  // "outlook" adds the 48 h of what the river really did next (hindsight standing in for the NWS forecast).
+  // levelFn(category, forecastCategory) -> 0..4 lets the app reuse its own level pipeline.
+  function replayLeadTimes(series, cats, levelFn) {
+    levelFn = levelFn || function (c, f) { return Math.max(riverLevel(c), riverLevel(f)); };
+    var crest = series[0];
+    series.forEach(function (p) { if (p[1] > crest[1]) crest = p; });
+    var obs = {}, out = {};
+    series.forEach(function (p) {
+      if (p[0] > crest[0]) return;
+      var r = replayAt(series, cats, p[0]);
+      var lo = levelFn(r.category, null), lf = levelFn(r.category, r.forecastCategory);
+      for (var k = 1; k <= 4; k++) {
+        if (lo >= k && obs[k] == null) obs[k] = p[0];
+        if (lf >= k && out[k] == null) out[k] = p[0];
+      }
+    });
+    function lead(m) { var o = {}; for (var k = 1; k <= 4; k++) o[k] = m[k] == null ? null : { at: m[k], hours: Math.round((crest[0] - m[k]) / 36e5) }; return o; }
+    return { crestMs: crest[0], crestFt: crest[1], observed: lead(obs), outlook: lead(out) };
+  }
+
   // Offline fallback: a saved snapshot may stand in for live data only for (nearly) the same spot and only while it is recent.
   // Returns { ok, ageH, reason } so the UI can say exactly why an old snapshot was or wasn't used.
   function snapshotUsable(snap, lat, lon, nowMs, maxKm, maxHours) {
@@ -284,7 +306,7 @@
     return { ok: true, ageH: Math.round(ageH * 10) / 10 };
   }
 
-  var api = {snapshotUsable: snapshotUsable,  replayAt: replayAt, heatIndexF: heatIndexF, heatLevel: heatLevel, heatRiskLevel: heatRiskLevel, feetToFlood: feetToFlood,
+  var api = {snapshotUsable: snapshotUsable, replayAt: replayAt, replayLeadTimes: replayLeadTimes, heatIndexF: heatIndexF, heatLevel: heatLevel, heatRiskLevel: heatRiskLevel, feetToFlood: feetToFlood,
     forecastPeak: forecastPeak, riskGauges: riskGauges, kmToMi: kmToMi, ageHours: ageHours, valueAt: valueAt,
     hourlyHeatIndex: hourlyHeatIndex, CAT_ORDER: CAT_ORDER, riverCategory: riverCategory, riverLevel: riverLevel,
     alertLevel: alertLevel, alertHazard: alertHazard, overallRisk: overallRisk,
