@@ -40,6 +40,8 @@
 
   // ---------- helpers ----------
   function t(key) { var v = I[state.lang][key]; return v == null ? I.en[key] : v; }
+  function placeText(l) { return l === 'here' ? t('your_location') : l === DEMO_LOC.label ? t('demo_place') : l; }
+  function evName(e) { var m = state.lang === 'es' && t('alert_names'); return (m && m[e]) || e; }
   function fmt(s, o) { return String(s).replace(/\{(\w+)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; }); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function getJSON(url, ms) {
@@ -210,7 +212,7 @@
     msg(t('loading'));
     $('main').setAttribute('aria-busy', 'true');
     setMap(lat, lon);
-    $('placeName').textContent = state.label === 'here' ? t('your_location') : state.label;
+    $('placeName').textContent = placeText(state.label);
     if (!state.data) $('lvlDesc').textContent = t('loading_desc');
     if (!state.data) ['zone', 'wx', 'rivers', 'alerts'].forEach(function (k) { $(k).innerHTML = '<p class="skel">' + esc(t('loading')) + '</p>'; });
 
@@ -273,11 +275,12 @@
     $('lvlDesc').textContent = unsure ? fmt(t('incomplete_desc'), { list: missingTxt })
       : t('level_desc')[lv] + (risk.incomplete ? ' ' + fmt(t('incomplete_note'), { list: missingTxt }) : '');
     $('lvlLabel').textContent = t('level_word');
+    $('placeName').textContent = placeText(state.label);
     var on = $('offlineNote'); on.hidden = !d.offlineAt;
     if (d.offlineAt) on.textContent = fmt(t('offline_snap'), { time: fmtTime(d.offlineAt), age: d.offlineAge < 1 ? t('age_lt1') : fmt(t('age_h'), { n: num(d.offlineAge) }) });
     var hz = t('hz'), catNames = t('cat');
     $('drivers').innerHTML = risk.drivers.length ? risk.drivers.slice(0, 4).map(function (x) {
-      var extra = x.hazard === 'heat' ? ' ' + x.label + '°F' : x.hazard === 'rain' ? ' ' + num(x.label) + ' in' : x.label ? ': ' + x.label : '';
+      var extra = x.hazard === 'heat' ? ' ' + x.label + '°F' : x.hazard === 'rain' ? ' ' + num(x.label) + ' in' : x.label ? ': ' + (x.source === 'alert' ? evName(x.label) : x.label) : '';
       if (x.hazard === 'river') {
         var gg = (d.gauges || []).filter(function (g) { return g.name === x.label; })[0];
         if (gg) extra += ' (' + (catNames[x.rising ? gg.forecastCategory : gg.category] || '') + (x.rising ? ', ' + t('fcst_short') : '') + ')';
@@ -340,7 +343,7 @@
     else {
       $('alerts').innerHTML = (state.lang === 'es' ? '<p class="fine">' + esc(t('alerts_en')) + '</p>' : '') + d.alerts.map(function (a) {
         var lvA = L_.alertLevel(a);
-        return '<div class="alert a' + lvA + '"><b>' + esc(a.event) + '</b><small>' + esc(a.headline || a.areaDesc || '') + '</small>' +
+        return '<div class="alert a' + lvA + '"><b>' + esc(evName(a.event)) + (evName(a.event) !== a.event ? ' <span lang="en">(' + esc(a.event) + ')</span>' : '') + '</b><small>' + esc(a.headline || a.areaDesc || '') + '</small>' +
           (a.ends || a.expires ? '<small>' + esc(t('until')) + ' ' + esc(fmtTime(Date.parse(a.ends || a.expires))) + '</small>' : '') +
           '<details><summary>' + esc(t('details')) + '</summary><p>' + esc(a.description || '') + '</p>' + (a.instruction ? '<p><b>' + esc(a.instruction) + '</b></p>' : '') + '</details></div>';
       }).join('');
@@ -411,10 +414,22 @@
     ['minor', 'major', 'action', 'moderate'].forEach(function (k) {
       var l = lines.filter(function (x) { return x[0] === k; })[0];
       if (!l || l[1] < vmin || l[1] > vmax) return;
-      var y = Y(l[1]), side = placed.start.concat(placed.end).every(function (py) { return Math.abs(py - y) >= 15; }) ? 'start' : null;
-      if (!side) return;
-      placed[side].push(y);
-      out.push('<text x="' + (side === 'start' ? P.l + 6 : W - P.r - 6) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="' + side + '" font-size="11" fill="' + catCol[k] + '" paint-order="stroke" stroke="#fbfcfd" stroke-width="3">' + esc(t('cat')[k]) + ' ' + l[1] + ' ' + esc(t('ft')) + '</text>');
+      var y = Y(l[1]), txt = t('cat')[k] + ' ' + l[1] + ' ' + t('ft'), wEst = txt.length * 6.2;
+      // Try above the line on the left, then on the right, then just below the line (left, right).
+      var room = W - P.l - P.r - 12, pick = null;
+      // On phones the flood-stage label goes under its line, leaving room above for the major-flood label.
+      var cands = [['start', y - 3], ['end', y - 3], ['start', y + 12], ['end', y + 12]];
+      if (W < 500 && k === 'minor') cands.unshift(['start', y + 12]);
+      cands.some(function (c) {
+        var ok = c[1] > P.t && c[1] < H - P.b - 2 && placed.start.concat(placed.end).every(function (p) {
+          return Math.abs(p.ty - c[1]) >= 13 || (p.side !== c[0] && p.w + wEst + 24 <= room);
+        });
+        if (ok) pick = c; return ok;
+      });
+      if (!pick) return;
+      var side = pick[0];
+      placed[side].push({ ty: pick[1], w: wEst, side: side });
+      out.push('<text x="' + (side === 'start' ? P.l + 6 : W - P.r - 6) + '" y="' + pick[1].toFixed(1) + '" text-anchor="' + side + '" font-size="11" fill="' + catCol[k] + '" paint-order="stroke" stroke="#fbfcfd" stroke-width="3">' + esc(txt) + '</text>');
     });
     var days = Math.max(1, Math.round((t1 - t0) / 864e5)), step = Math.max(1, Math.ceil(days / (W < 500 ? 4 : 7)));
     // Day ticks at 06:00 UTC = midnight CST / 1 am CDT, so the Central-time date label is right all year.
@@ -453,7 +468,7 @@
     var d = state.data; layers.group.clearLayers();
     (d.near || []).forEach(function (g) { L.polygon(ringsToLatLngs(g), { color: '#3d6ea8', weight: 1, fillOpacity: 0.18, interactive: false }).addTo(layers.group); });
     if (d.zone.geom) L.polygon(ringsToLatLngs(d.zone.geom), { color: d.zone.info.sfha ? '#b4500f' : '#1f8a4c', weight: 2, fillOpacity: 0.25, interactive: false }).addTo(layers.group);
-    L.circleMarker([state.lat, state.lon], { radius: 9, color: '#fff', weight: 3, fillColor: '#0b2a3c', fillOpacity: 1 }).addTo(layers.group).bindTooltip(esc(state.label === 'here' ? t('your_location') : state.label));
+    L.circleMarker([state.lat, state.lon], { radius: 9, color: '#fff', weight: 3, fillColor: '#0b2a3c', fillOpacity: 1 }).addTo(layers.group).bindTooltip(esc(placeText(state.label)));
     (d.gauges || []).forEach(function (g) {
       L.circleMarker([g.lat, g.lon], { radius: 7, color: '#fff', weight: 2, fillColor: { no_flooding: '#1f8a4c', action: '#c99a06', minor: '#b4500f', moderate: '#b3122e', major: '#6b0018' }[g.category] || '#7a8a94', fillOpacity: 1 })
         .addTo(layers.group).bindTooltip(esc(g.name) + ': ' + (g.stage != null ? num(g.stage) + ' ft' : '–'))
@@ -480,7 +495,7 @@
   function buildPlanSheet(f) {
     var d = state.data || {}, zi = (d.zone && d.zone.info) || L_.floodZoneInfo(null), zt = t('zone')[zi.key] || t('zone').unknown;
     var p = L_.familyPlan(zi, d.gauges, RISK_KM), risk = d.risk, lv = risk ? risk.level : null, unsure = risk && risk.incomplete && lv === 0;
-    var place = state.label === 'here' ? t('your_location') : state.label;
+    var place = placeText(state.label);
     var url = location.href;
     var row = function (k, v) { return '<div class="ps-field"><b>' + esc(t(k)) + '</b><span>' + (v ? esc(v).replace(/\n/g, '<br>') : '&nbsp;') + '</span></div>'; };
     var river = p.gauge
