@@ -29,6 +29,8 @@
   };
 
   var REFRESH_MS = 15 * 60e3, STALE_H = 6, RISK_KM = 15;
+  // Number of unit tests in logic.test.js (that test file fails if this goes out of date).
+  var TEST_COUNT = 30;
   var DEMO_CREST = DEMO.nowMs;
   // Replay point: inside FEMA Zone AE next to the Brazos in Richmond (checked against the NFHL), so the replay shows the full escalation.
   var DEMO_LOC = { lat: 29.5862, lon: -95.7655, label: 'Richmond · Brazos floodplain' };
@@ -155,6 +157,29 @@
       what: gauge.category === 'major' ? 'Major flooding is occurring.' : gauge.category === 'moderate' || gauge.category === 'minor' ? 'Flooding is occurring.' : 'The river is forecast to reach flood stage.' });
     return [a];
   }
+  // Lead time: run every replay moment through the same level pipeline the page uses (gauge -> zone adjustment -> demo alert -> overall level).
+  function demoLevelFn(zoneInfo) {
+    var g = DEMO.gauge;
+    return function (cat, fcat) {
+      var gauge = { name: g.name, km: L_.distanceKm(state.lat, state.lon, g.latitude, g.longitude), category: cat, forecastCategory: fcat };
+      return L_.overallRisk({ alerts: demoAlerts(gauge), gauges: L_.riskGauges([gauge], zoneInfo, RISK_KM) }).level;
+    };
+  }
+  function renderLead() {
+    var box = $('lead'); if (!box) return;
+    var d = state.data;
+    if (!state.demo || !d) { box.innerHTML = ''; return; }
+    var g = DEMO.gauge, r = L_.replayLeadTimes(g.series, g.categories, demoLevelFn(d.zone && d.zone.info));
+    var o = r.observed[4], f = r.outlook[4];
+    if (!o) { box.innerHTML = ''; return; }
+    var days = function (h) { return num(h / 24); };
+    box.innerHTML = '<p class="lead-head">' + esc(fmt(t('lead_head'), { h: o.hours, d: days(o.hours) })) + '</p>' +
+      '<p>' + esc(fmt(t('lead_obs'), { t: fmtTime(o.at, true), major: num(g.categories.major.stage), crest: r.crestFt.toLocaleString(locale()), c: fmtTime(r.crestMs, true) })) + '</p>' +
+      (f ? '<p class="lead-out">' + esc(fmt(t('lead_out'), { h2: f.hours, d2: days(f.hours) })) + '</p>' : '') +
+      '<p class="lead-note">' + esc(t('lead_note')) + '</p>' +
+      '<button type="button" id="leadBtn">' + esc(t('lead_jump')) + '</button>';
+    $('leadBtn').addEventListener('click', function () { stopPlay(); state.demoNow = o.at; $('replay').value = o.at; recomputeDemo(); });
+  }
   function recomputeDemo() {
     var d = state.data; if (!d || !state.demo) return;
     d.gauges = demoGauges(state.lat, state.lon); d.alerts = demoAlerts(d.gauges[0]); d.now = state.demoNow;
@@ -162,6 +187,7 @@
     render(); selectGauge(state.selected || d.gauges[0].lid);
     var rt = fmtTime(state.demoNow, true) + ' CDT · ' + num(d.gauges[0].stage) + ' ' + t('ft');
     $('replayTime').textContent = rt; $('replay').setAttribute('aria-valuetext', rt);
+    if (!$('lead').innerHTML) renderLead();
   }
 
   // ---------- offline snapshot (last good result for this spot, kept only in this browser) ----------
@@ -178,6 +204,7 @@
   // ---------- main run ----------
   function run(lat, lon, label) {
     var id = ++state.runId;
+    $('lead').innerHTML = '';
     state.lat = lat; state.lon = lon; state.label = label || state.label;
     updateURL();
     msg(t('loading'));
@@ -555,6 +582,8 @@
     $('demoBanner').hidden = !state.demo; $('demoText').textContent = t('demo_banner');
     $('playBtn').textContent = state.playing ? t('pause') : t('play');
     $('map').setAttribute('aria-label', t('map_label'));
+    $('howTest').textContent = fmt(t('how_test'), { n: TEST_COUNT });
+    $('lead').innerHTML = '';
     if (state.data) { if (state.demo) recomputeDemo(); else { render(); if (state.selected) selectGauge(state.selected); } }
   }
 
