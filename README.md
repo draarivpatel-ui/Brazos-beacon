@@ -94,7 +94,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 git clone https://github.com/draarivpatel-ui/Brazos-beacon.git
 cd Brazos-beacon
 python3 -m http.server 8000      # then open http://localhost:8000
-node logic.test.js               # 30 unit tests for the risk logic
+node logic.test.js               # 33 unit tests for the risk logic
 ```
 
 ## Project structure
@@ -122,7 +122,7 @@ Spanish flood terms follow the agencies' own Spanish: NWS *vigilancia* / *aviso*
 
 ## Testing
 
-- `node logic.test.js`: **30 unit tests, all passing** (re-run Oct 10, 2026) (flood categories incl. missing/-9999 values, feet-to-flood-stage, forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, the replay's lead-time numbers (with and without look-ahead), checklist escalation, the family plan choosing the nearest in-range gauge that has an official flood stage, and the offline fallback only reusing a saved check for the same spot (within 1.5 km) from the last 72 hours). The test file also checks that the test count shown in the app's "How it works" panel matches.
+- `node logic.test.js`: **33 unit tests, all passing** (re-run Oct 11, 2026) (flood categories incl. missing/-9999 values, feet-to-flood-stage, forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, the replay's lead-time numbers (with and without look-ahead), checklist escalation, the family plan choosing the nearest in-range gauge that has an official flood stage, and the offline fallback only reusing a saved check for the same spot (within 1.5 km) from the last 72 hours). The test file also checks that the test count shown in the app's "How it works" panel matches.
 - During development the app was also run headless (jsdom and Chromium) against the live APIs, with every API failing, with only NWS alerts failing, fully offline (service worker serving the app, the saved last check at the same spot, no saved check used for a different spot), through the Harvey replay at several moments, in Spanish, and at phone width (390 px). The deployed site at aariv.me was checked the same way (1280 px and 390 px, no console errors or failed API requests from the real domain).
 
 ## What's next
