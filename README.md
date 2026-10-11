@@ -108,6 +108,7 @@ logic.test.js   unit tests (node logic.test.js)
 i18n.js         English + Spanish strings
 demo.js         real USGS Harvey 2017 series for the replay mode
 vendor/qrcode.js  QR code generator for the printable plan (qrcode-generator 1.4.4, MIT, Kazuhiko Arase)
+vendor/leaflet.css  Leaflet 1.9.4 stylesheet, self-hosted unchanged (BSD-2-Clause); leaflet.js still loads from unpkg with SRI
 og-image.png    link-preview image
 ```
 
