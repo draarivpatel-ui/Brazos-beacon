@@ -137,6 +137,18 @@ t('replay lead time: observed-only never uses look-ahead; outlook is earlier', (
   const h = L.replayLeadTimes(D.BEACON_DEMO.gauge.series, D.BEACON_DEMO.gauge.categories);
   assert.strictEqual(h.crestFt, 55.19); assert(h.observed[4].hours > 0 && h.outlook[4].hours >= h.observed[4].hours);
 });
+t('a failed source (e.g. NWPS 429) with no hazards is incomplete, never All clear', () => {
+  const r = L.overallRisk({ alerts: [], gauges: [], missing: ['river gauges'] });
+  assert.strictEqual(r.level, 0); assert.strictEqual(r.incomplete, true); assert.deepStrictEqual(r.missing, ['river gauges']);
+});
+t('a failed source does not hide a real hazard from another source', () => {
+  const r = L.overallRisk({ alerts: [{ event: 'Flash Flood Warning', severity: 'Severe' }], missing: ['river gauges'] });
+  assert(r.level >= 1); assert.strictEqual(r.incomplete, true);
+});
+t('all sources answering is complete', () => {
+  const r = L.overallRisk({ alerts: [], gauges: [], missing: [] });
+  assert.strictEqual(r.incomplete, false);
+});
 const appCount = +(/var TEST_COUNT = (\d+);/.exec(require('fs').readFileSync(__dirname + '/app.js', 'utf8')) || [])[1];
 assert.strictEqual(appCount, n, 'app.js TEST_COUNT (shown in the "How it works" panel) must match the number of tests');
 console.log(`\n${n} tests passed`);
