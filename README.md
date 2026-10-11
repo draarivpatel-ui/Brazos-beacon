@@ -34,7 +34,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 - **One Beacon level (0–4):** *All clear · Stay aware · Get ready · Take action · Danger*, with the specific drivers listed ("River: Brazos River at Richmond (Major flooding)", "Max heat index (3 days) 109°F").
 - **Never a false "All clear".** If NWS alerts, NOAA gauges, or the NWS forecast don't answer, the page says *"Could not check everything"* instead of showing green, and names the missing source.
 - **FEMA flood zone at your exact point**, explained in plain words, with your zone's polygon and nearby high-risk areas drawn on the map, plus a link to the official FEMA map for that spot.
-- **Nearest 5 river gauges** (distance in miles): current stage, **how many feet below or above flood stage**, the **crest of the official NWS forecast** (not just its next point), when it was observed, and a warning if the reading is more than 6 hours old.
+- **Nearest 4 river gauges** (distance in miles): current stage, **how many feet below or above flood stage**, the **crest of the official NWS forecast** (not just its next point), when it was observed, and a warning if the reading is more than 6 hours old.
 - **SVG hydrograph:** 7 days observed plus the NWS forecast, with action / minor / moderate / major flood lines.
 - **Active NWS watches and warnings** for that exact point, with "until" times.
 - **Next 72 hours:** "feels like" now, max heat index, and forecast rain totals for 24 h and 72 h.
@@ -56,7 +56,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
    ▼            ▼              ▼                      ▼                      ▼
  FEMA NFHL   NOAA NWPS       NWS /alerts/active   NWS /points → gridData   (map: Leaflet + OSM)
  flood zone  gauges in bbox  for the point        heat index + QPF rain
- polygon     → nearest 5 →
+ polygon     → nearest 4 →
              gauge detail +
              stageflow series
    └────────────┴──────────────┴──────────────────────┴──────────────────────┘
@@ -94,7 +94,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 git clone https://github.com/draarivpatel-ui/Brazos-beacon.git
 cd Brazos-beacon
 python3 -m http.server 8000      # then open http://localhost:8000
-node logic.test.js               # 33 unit tests for the risk logic
+node logic.test.js               # 35 unit tests for the risk logic
 ```
 
 ## Project structure
@@ -122,7 +122,8 @@ Spanish flood terms follow the agencies' own Spanish: NWS *vigilancia* / *aviso*
 
 ## Testing
 
-- `node logic.test.js`: **33 unit tests, all passing** (re-run Oct 11, 2026) (flood categories incl. missing/-9999 values, feet-to-flood-stage, forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, the replay's lead-time numbers (with and without look-ahead), checklist escalation, the family plan choosing the nearest in-range gauge that has an official flood stage, and the offline fallback only reusing a saved check for the same spot (within 1.5 km) from the last 72 hours). The test file also checks that the test count shown in the app's "How it works" panel matches.
+- `node logic.test.js`: **35 unit tests, all passing** (re-run Oct 11, 2026) (flood categories incl. missing/-9999 values, feet-to-flood-stage, what each gauge card may say (feet to flood stage, "no flood stage set" only when NWS truly has none, "flood stage not loaded" when it could not be fetched), forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, the replay's lead-time numbers (with and without look-ahead), checklist escalation, the family plan choosing the nearest in-range gauge that has an official flood stage, and the offline fallback only reusing a saved check for the same spot (within 1.5 km) from the last 72 hours). The test file also checks that the test count shown in the app's "How it works" panel matches.
+- `python3 tests/dom_429_test.py` (18 checks) and `python3 tests/dom_far_gauge_test.py` (17 checks): headless Chromium with every API stubbed. The first checks that a rate limit (HTTP 429) from any source gives the honest "Could not check everything" state, never a false all-clear. The second checks that every listed gauge, including ones farther than 9 miles, shows feet below/above flood stage and the NWS 7-day forecast high in English and Spanish, that a far gauge whose flood stage can't be loaded says "flood stage not loaded", and that far gauges' flood stages are cached for 7 days so refreshes stay within NOAA's 10-requests-per-5-minutes limit.
 - During development the app was also run headless (jsdom and Chromium) against the live APIs, with every API failing, with only NWS alerts failing, fully offline (service worker serving the app, the saved last check at the same spot, no saved check used for a different spot), through the Harvey replay at several moments, in Spanish, and at phone width (390 px). The deployed site at aariv.me was checked the same way (1280 px and 390 px, no console errors or failed API requests from the real domain).
 
 ## What's next
