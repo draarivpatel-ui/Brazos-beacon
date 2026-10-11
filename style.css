@@ -62,11 +62,11 @@ main { padding: 8px clamp(16px, 4vw, 40px) 24px; }
 .ghost { background: rgba(255,255,255,.15); color: inherit; border: 1px solid rgba(255,255,255,.6); border-radius: 10px; padding: 8px 12px; align-self: start; }
 
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;
-  grid-template-areas: "map zone wx" "map actions alerts" "rivers rivers rivers" "help help help"; }
+  grid-template-areas: "map zone wx" "map actions alerts" "rivers rivers rivers" "help help help" "how how how"; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; min-width: 0; }
 .c-map { grid-area: map; padding: 0; overflow: hidden; min-height: 460px; display: flex; flex-direction: column; }
 .c-zone { grid-area: zone; } .c-wx { grid-area: wx; } .c-actions { grid-area: actions; } .c-alerts { grid-area: alerts; }
-.c-rivers { grid-area: rivers; } .c-help { grid-area: help; }
+.c-rivers { grid-area: rivers; } .c-help { grid-area: help; } .c-how { grid-area: how; }
 #map { width: 100%; flex: 1 1 auto; min-height: 460px; }
 .rivers { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .card h3 { margin: 0 0 10px; font-size: 15px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
@@ -121,12 +121,12 @@ main { padding: 8px clamp(16px, 4vw, 40px) 24px; }
 .skel { color: var(--muted); font-style: italic; }
 
 @media (max-width: 980px) {
-  .grid { grid-template-columns: 1fr 1fr; grid-template-areas: "zone wx" "actions alerts" "map map" "rivers rivers" "help help"; }
+  .grid { grid-template-columns: 1fr 1fr; grid-template-areas: "zone wx" "actions alerts" "map map" "rivers rivers" "help help" "how how"; }
   .c-map, #map { min-height: 340px; }
   .help { columns: 2; }
 }
 @media (max-width: 640px) {
-  .grid { grid-template-columns: 1fr; grid-template-areas: "zone" "actions" "alerts" "wx" "rivers" "map" "help"; }
+  .grid { grid-template-columns: 1fr; grid-template-areas: "zone" "actions" "alerts" "wx" "rivers" "map" "help" "how"; }
   .c-map, #map { min-height: 300px; }
   .rivers { grid-template-columns: 1fr; }
   .top { padding: 14px 16px; } .logo { font-size: 28px; } .tag { font-size: 13px; }
@@ -189,3 +189,21 @@ main { padding: 8px clamp(16px, 4vw, 40px) 24px; }
 .ps-nums { font-size: 9pt; }
 
 .offline-note { margin: 10px 0 0; padding: 8px 12px; border-left: 5px solid #ffb703; background: #fff; color: var(--ink); font-size: 14px; border-radius: 6px; }
+
+/* Harvey replay lead time */
+.lead { margin-top: 10px; background: #fff; border: 1px solid #c99a06; border-left: 6px solid #b3122e; border-radius: 8px; padding: 10px 14px; color: #2b2100; font-weight: 400; }
+.lead:empty { display: none; }
+.lead .lead-head { font-size: 17px; font-weight: 800; margin: 0 0 4px; color: #7a0c1f; }
+.lead .lead-head b { font-size: 22px; }
+.lead p { margin: 0 0 4px; font-size: 14px; line-height: 1.45; }
+.lead .lead-out { color: #4a3a00; }
+.lead .lead-note { font-size: 12.5px; color: #5c4a10; }
+.lead button { margin-top: 4px; border: 1px solid #a07a00; background: #fff; color: #3d2d00; border-radius: 8px; padding: 6px 12px; font-weight: 700; }
+
+/* How it works / tested */
+.how { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 22px; }
+.how h4 { margin: 0 0 4px; font-size: 15px; }
+.how p { margin: 0 0 6px; font-size: 14px; line-height: 1.45; }
+.how-src { margin: 0 0 6px; padding-left: 18px; font-size: 14px; line-height: 1.5; }
+@media (max-width: 1100px) { .how { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .how { grid-template-columns: 1fr; } }
