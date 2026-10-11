@@ -30,7 +30,7 @@
 
   var REFRESH_MS = 15 * 60e3, STALE_H = 6, RISK_KM = 15;
   // Number of unit tests in logic.test.js (that test file fails if this goes out of date).
-  var TEST_COUNT = 35;
+  var TEST_COUNT = 36;
   var DEMO_CREST = DEMO.nowMs;
   // Replay point: inside FEMA Zone AE next to the Brazos in Richmond (checked against the NFHL), so the replay shows the full escalation.
   var DEMO_LOC = { lat: 29.5862, lon: -95.7655, label: 'Richmond · Brazos floodplain' };
@@ -297,7 +297,7 @@
     if (d.offlineAt) on.textContent = fmt(t('offline_snap'), { time: fmtTime(d.offlineAt), age: d.offlineAge < 1 ? t('age_lt1') : fmt(t('age_h'), { n: num(d.offlineAge) }) });
     var hz = t('hz'), catNames = t('cat');
     $('drivers').innerHTML = risk.drivers.length ? risk.drivers.slice(0, 4).map(function (x) {
-      var extra = x.hazard === 'heat' ? ' ' + x.label + '°F' : x.hazard === 'rain' ? ' ' + num(x.label) + ' in' : x.label ? ': ' + (x.source === 'alert' ? evName(x.label) : x.label) : '';
+      var extra = x.hazard === 'heat' ? ' ' + x.label + '°F' : x.hazard === 'rain' ? ' ' + num(x.label) + ' ' + t('inch') : x.label ? ': ' + (x.source === 'alert' ? evName(x.label) : x.label) : '';
       if (x.hazard === 'river') {
         var gg = (d.gauges || []).filter(function (g) { return g.name === x.label; })[0];
         if (gg) extra += ' (' + (catNames[x.rising ? gg.forecastCategory : gg.category] || '') + (x.rising ? ', ' + t('fcst_short') : '') + ')';
@@ -322,8 +322,8 @@
       $('wx').innerHTML = [
         [w.nowHI != null ? w.nowHI + '°F' : '–', t('hi_now'), w.nowHI != null && L_.heatRiskLevel(w.nowHI) > 0],
         [w.maxHI != null ? w.maxHI + '°F' : '–', t('max_hi'), w.maxHI != null && L_.heatRiskLevel(w.maxHI) > 0],
-        [w.rain24 != null ? num(w.rain24) + ' in' : '–', t('rain_24'), L_.rainLevel(w.rain24) > 0],
-        [w.rain72 != null ? num(w.rain72) + ' in' : '–', t('rain_72'), false]
+        [w.rain24 != null ? num(w.rain24) + ' ' + t('inch') : '–', t('rain_24'), L_.rainLevel(w.rain24) > 0],
+        [w.rain72 != null ? num(w.rain72) + ' ' + t('inch') : '–', t('rain_72'), false]
       ].map(function (s) { return '<div class="stat' + (s[2] ? ' hot' : '') + '"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>'; }).join('');
     }
 
@@ -475,9 +475,17 @@
   function initMap() {
     if (!window.L) { $('map').innerHTML = '<p class="empty pad">' + esc(t('map_off')) + '</p>'; return; }
     map = L.map('map', { zoomControl: true, attributionControl: true, scrollWheelZoom: false }).setView([state.lat, state.lon], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors · Flood zones: FEMA NFHL' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    setMapAttr();
     layers.group = L.layerGroup().addTo(map);
     map.on('click', function (e) { run(e.latlng.lat, e.latlng.lng, e.latlng.lat.toFixed(4) + ', ' + e.latlng.lng.toFixed(4)); });
+  }
+  // FEMA credit follows the page language (OSM credit stays as OSM asks).
+  var mapAttr = null;
+  function setMapAttr() {
+    if (!map || !map.attributionControl) return;
+    if (mapAttr) map.attributionControl.removeAttribution(mapAttr);
+    mapAttr = esc(t('map_attr')); map.attributionControl.addAttribution(mapAttr);
   }
   function setMap(lat, lon) { if (map) map.setView([lat, lon], 12); }
   function ringsToLatLngs(geom) { return (geom && geom.rings || []).map(function (r) { return r.map(function (p) { return [p[1], p[0]]; }); }); }
@@ -631,7 +639,7 @@
     $('planBtn').hidden = state.demo;
     $('demoBanner').hidden = !state.demo; $('demoText').textContent = t('demo_banner');
     $('playBtn').textContent = state.playing ? t('pause') : t('play');
-    $('map').setAttribute('aria-label', t('map_label'));
+    $('map').setAttribute('aria-label', t('map_label')); setMapAttr();
     $('howTest').textContent = fmt(t('how_test'), { n: TEST_COUNT });
     if (!state.data) $('lvlDesc').textContent = t('loading_desc');
     $('lead').innerHTML = '';
