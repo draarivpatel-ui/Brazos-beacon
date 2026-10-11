@@ -159,6 +159,16 @@ main { padding: 8px clamp(16px, 4vw, 40px) 24px; }
   body.print-plan .plan-sheet { display: block; color: #000; font-size: 9.5pt; line-height: 1.25; }
   @page { margin: 9mm; }
 }
+/* off-screen layout used by fitPlanSheet(): same width and type as the printed sheet */
+.plan-sheet.ps-measure { display: block; position: absolute; left: -10000px; top: 0; width: calc(8.5in - 18mm); color: #000; font-size: 9.5pt; line-height: 1.25; }
+body.print-plan .plan-sheet.ps-c1, .plan-sheet.ps-measure.ps-c1 { font-size: 8.5pt; line-height: 1.18; }
+.plan-sheet.ps-c1 .ps-field span { font-size: 8.5pt; }
+.plan-sheet.ps-c1 .ps-box { padding: 4px 8px; margin-bottom: 6px; }
+.plan-sheet.ps-c1 .ps-steps li { margin-bottom: 2px; }
+body.print-plan .plan-sheet.ps-c2, .plan-sheet.ps-measure.ps-c2 { font-size: 8pt; line-height: 1.12; }
+.plan-sheet.ps-c2 .ps-field span { font-size: 8pt; }
+.plan-sheet.ps-c2 .ps-check { columns: 3; }
+.plan-sheet.ps-c2 h1 { font-size: 15pt; }
 .plan-sheet h1 { font-size: 18pt; margin: 0 0 4px; }
 .plan-sheet h2 { font-size: 11pt; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 4px; color: #0b2a3c; }
 .plan-sheet p { margin: 2px 0; }
