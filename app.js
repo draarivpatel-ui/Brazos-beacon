@@ -114,9 +114,10 @@
     return getJSON(API.nwpsList(box), 20000).then(function (r) {
       var list = (r.gauges || []).map(function (g) {
         g.km = L_.distanceKm(lat, lon, g.latitude, g.longitude); return g;
-      }).sort(function (a, b) { return a.km - b.km; }).slice(0, 5);
+      }).sort(function (a, b) { return a.km - b.km; }).slice(0, 4);
       return Promise.all(list.map(function (g) {
-        var full = getJSON(API.nwpsGauge(g.lid)).then(null, function () { return g; });
+        // Rate-limit friendly (NWPS allows ~10 calls / 5 min): metadata only for gauges within 9 mi.
+        var full = g.km <= 14.5 ? getJSON(API.nwpsGauge(g.lid)).then(null, function () { return g; }) : Promise.resolve(g);
         var flow = getJSON(API.nwpsFlow(g.lid), 20000).then(function (s) {
           return { obs: seriesPts(s.observed).filter(function (p) { return p.t >= now - 7 * 864e5; }), fc: seriesPts(s.forecast) };
         }, function () { return null; });
