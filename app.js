@@ -627,6 +627,8 @@
       }, function () { var e = new Error('unreachable'); e.reached = reached; throw e; });
     });
   }
+  // GeolocationPositionError codes: 1 denied, 2 unavailable, 3 timeout. Only 1 is a permission problem.
+  function locErrKey(err) { var c = err && err.code; return c === 1 ? 'err_loc' : c === 3 ? 'err_loc_timeout' : 'err_loc_na'; }
   function geoErr(e) {
     if (e && e.reached) return t('err_geo');
     return navigator.onLine === false ? t('err_geo_offline') : t('err_geo_net');
@@ -705,11 +707,11 @@
         function (e) { if (gid === state.pick) msg(geoErr(e), true); });
     });
     $('locBtn').addEventListener('click', function () {
-      if (!navigator.geolocation) { msg(t('err_loc'), true); return; }
+      if (!navigator.geolocation) { msg(t('err_loc_na'), true); return; }
       msg(t('locating'));
       var gid = ++state.pick;
       navigator.geolocation.getCurrentPosition(function (pos) { if (gid === state.pick) run(pos.coords.latitude, pos.coords.longitude, 'here'); },
-        function () { if (gid === state.pick) msg(t('err_loc'), true); }, { timeout: 10000, maximumAge: 300000 });
+        function (err) { if (gid === state.pick) msg(t(locErrKey(err)), true); }, { timeout: 10000, maximumAge: 300000 });
     });
     Array.prototype.forEach.call(document.querySelectorAll('.chip[data-ll]'), function (b) {
       b.addEventListener('click', function () { state.pick++; var ll = b.getAttribute('data-ll').split(','); run(+ll[0], +ll[1], b.textContent); });

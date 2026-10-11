@@ -7,6 +7,7 @@
 - A blank (spaces-only) search explains itself and returns focus to the field.
 - Map markers are not unnamed Tab stops; zoom buttons follow the page language (EN/ES).
 - The search placeholder fits the field at 390 px in English and Spanish (no mid-word cut).
+- "Use my location": denied, unavailable and timed-out each get their own message; a late answer can't overwrite a newer pick.
 Run: python3 tests/dom_search_map_test.py
 """
 import json, os, sys
@@ -107,6 +108,22 @@ def main():
         search(pg, '1 Test St', 1500)
         check('successful search shows the geocoded place, clears the message',
               pg.evaluate("document.getElementById('placeName').textContent").startswith('1 Test St') and msg(pg) == '', (msg(pg)))
+        ctx.close()
+        # 10. "Use my location" errors: denied / unavailable / timeout each get their own line (EN/ES)
+        for lang in ('en', 'es'):
+            for code, key in ((1, 'err_loc'), (2, 'err_loc_na'), (3, 'err_loc_timeout')):
+                ctx, pg, err = open_page(b, base, lang)
+                pg.evaluate("c => { navigator.geolocation.getCurrentPosition = (ok, bad) => setTimeout(() => bad({ code: c, message: 'stub' }), 50); }", code)
+                pg.click('#locBtn'); pg.wait_for_timeout(300)
+                check('%s: location error code %d -> %s' % (lang, code, key), msg(pg) == T(pg, key) and not err, msg(pg))
+                ctx.close()
+        # 11. location that answers after a newer chip pick is ignored
+        ctx, pg, err = open_page(b, base, 'en')
+        pg.evaluate("() => { navigator.geolocation.getCurrentPosition = (ok) => setTimeout(() => ok({ coords: { latitude: 29.70, longitude: -95.40 } }), 900); }")
+        pg.click('#locBtn'); pg.wait_for_timeout(100)
+        pg.click('.chip[data-ll]:has-text("Katy")'); pg.wait_for_timeout(2500)
+        check('a slow "Use my location" answer does not overwrite a newer Katy pick', pg.evaluate("document.getElementById('placeName').textContent") == 'Katy' and not err,
+              pg.evaluate("document.getElementById('placeName').textContent"))
         ctx.close()
         # 9. race: a slow search answering after a newer city-chip pick must not overwrite it
         held = []
