@@ -30,7 +30,7 @@
 
   var REFRESH_MS = 15 * 60e3, STALE_H = 6, RISK_KM = 15;
   // Number of unit tests in logic.test.js (that test file fails if this goes out of date).
-  var TEST_COUNT = 30;
+  var TEST_COUNT = 33;
   var DEMO_CREST = DEMO.nowMs;
   // Replay point: inside FEMA Zone AE next to the Brazos in Richmond (checked against the NFHL), so the replay shows the full escalation.
   var DEMO_LOC = { lat: 29.5862, lon: -95.7655, label: 'Richmond · Brazos floodplain' };
