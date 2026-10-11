@@ -165,6 +165,36 @@ t('gauge card: loaded flood stages give feet below/above; loaded-but-none says "
   // a loaded gauge with no stages must not borrow the list category
   assert.strictEqual(L.gaugeFloodStatus(5, null, true, 'minor').category, 'unknown');
 });
+t('i18n: every English string has a Spanish one (same keys, list lengths and {placeholders}); no English copied into ES', () => {
+  const sandbox = { window: {} };
+  require('vm').runInNewContext(require('fs').readFileSync(__dirname + '/i18n.js', 'utf8'), sandbox);
+  const { en, es } = sandbox.window.I18N;
+  const ES_ONLY = ['alert_names']; // Spanish names for NWS alert types (English shows NWS's own names)
+  const SAME_OK = /^(https?:\/\/|[\d-]+$|weather\.gov\/|Tropical$|Normal$)/; // URLs, phone numbers, words spelled the same in Spanish
+  const ph = (v) => (v.match(/\{\w+\}/g) || []).sort().join();
+  const walk = (a, b, path) => {
+    Object.keys(a).forEach((k) => {
+      const p = path + k;
+      assert(k in b, 'missing in es: ' + p);
+      if (a[k] && typeof a[k] === 'object') {
+        assert(b[k] && typeof b[k] === 'object', 'not an object/list in es: ' + p);
+        if (Array.isArray(a[k])) assert.strictEqual(b[k].length, a[k].length, 'list length differs: ' + p);
+        walk(a[k], b[k], p + '.');
+      } else {
+        assert.strictEqual(typeof b[k], typeof a[k], 'type differs: ' + p);
+        if (typeof a[k] === 'string') {
+          assert.strictEqual(ph(b[k]), ph(a[k]), 'placeholders differ: ' + p);
+          if (a[k].trim().length > 3 && !SAME_OK.test(a[k])) assert.notStrictEqual(b[k], a[k], 'English text copied into es: ' + p);
+        }
+      }
+    });
+    if (path === '') Object.keys(b).forEach((k) => assert(k in a || ES_ONLY.includes(k), 'extra key in es: ' + k));
+  };
+  walk(en, es, '');
+  ['fs_not_loaded', 'no_fs', 'too_far', 'incomplete_name', 'incomplete_desc', 'incomplete_note', 'err_src', 'offline', 'offline_snap', 'map_attr', 'inch'].forEach((k) => {
+    assert(typeof en[k] === 'string' && typeof es[k] === 'string' && es[k] !== en[k], 'far-gauge / rate-limit string not translated: ' + k);
+  });
+});
 const appCount = +(/var TEST_COUNT = (\d+);/.exec(require('fs').readFileSync(__dirname + '/app.js', 'utf8')) || [])[1];
 assert.strictEqual(appCount, n, 'app.js TEST_COUNT (shown in the "How it works" panel) must match the number of tests');
 console.log(`\n${n} tests passed`);
