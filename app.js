@@ -30,13 +30,13 @@
 
   var REFRESH_MS = 15 * 60e3, STALE_H = 6, RISK_KM = 15;
   // Number of unit tests in logic.test.js (that test file fails if this goes out of date).
-  var TEST_COUNT = 33;
+  var TEST_COUNT = 35;
   var DEMO_CREST = DEMO.nowMs;
   // Replay point: inside FEMA Zone AE next to the Brazos in Richmond (checked against the NFHL), so the replay shows the full escalation.
   var DEMO_LOC = { lat: 29.5862, lon: -95.7655, label: 'Richmond · Brazos floodplain' };
   var state = { lang: 'en', lat: 29.6197, lon: -95.6349, label: 'Sugar Land', demo: false, demoNow: DEMO_CREST, data: null, selected: null, runId: 0, series: {}, timer: null, playing: null };
   var map, layers = {};
-  var SNAP_KEY = 'beacon.snapshot.v1';
+  var SNAP_KEY = 'beacon.snapshot.v1', CATS_KEY = 'beacon.floodstages.v1', CATS_TTL = 7 * 864e5;
 
   // ---------- helpers ----------
   function t(key) { var v = I[state.lang][key]; return v == null ? I.en[key] : v; }
@@ -115,22 +115,32 @@
       var list = (r.gauges || []).map(function (g) {
         g.km = L_.distanceKm(lat, lon, g.latitude, g.longitude); return g;
       }).sort(function (a, b) { return a.km - b.km; }).slice(0, 4);
+      var cache = catsCacheLoad();
       return Promise.all(list.map(function (g) {
-        // Rate-limit friendly (NWPS allows ~10 calls / 5 min): metadata only for gauges within 9 mi.
-        var full = g.km <= 14.5 ? getJSON(API.nwpsGauge(g.lid)).then(null, function () { g.metaFailed = true; return g; }) : Promise.resolve(g);
+        // Rate-limit friendly (NWPS allows ~10 calls / 5 min): gauges that can change the level (within RISK_KM)
+        // always get fresh metadata; farther listed gauges reuse flood stages cached for 7 days, else fetch them once.
+        var hit = cache[g.lid], cached = g.km > RISK_KM && hit && now - hit.at >= 0 && now - hit.at < CATS_TTL;
+        var full = cached ? Promise.resolve(Object.assign(g, { flood: { categories: hit.cats }, catsLoaded: true }))
+          : getJSON(API.nwpsGauge(g.lid)).then(function (m) { m.catsLoaded = true; return m; }, function () { g.metaFailed = true; return g; });
         var flow = getJSON(API.nwpsFlow(g.lid), 20000).then(function (s) {
           return { obs: seriesPts(s.observed).filter(function (p) { return p.t >= now - 7 * 864e5; }), fc: seriesPts(s.forecast) };
         }, function () { return null; });
-        return Promise.all([full, flow]).then(function (x) { x[0].km = g.km; x[0].series = x[1]; return x[0]; });
+        return Promise.all([full, flow]).then(function (x) {
+          // The gauge list's live status is at least as fresh as the metadata's; keep it when the metadata lacks one.
+          if (!(x[0].status && x[0].status.observed) && g.status) x[0].status = g.status;
+          x[0].km = g.km; x[0].series = x[1]; return x[0];
+        });
       }));
     }).then(function (gs) {
-      return gs.map(function (g) {
+      var cache = catsCacheLoad();
+      var out = gs.map(function (g) {
         var cats = g.flood && g.flood.categories;
-        var hasCats = !!(cats && cats.minor && cats.minor.stage > -900);
         var obs = g.status && g.status.observed, fc = g.status && g.status.forecast;
         var stage = obs && obs.primary > -900 ? obs.primary : null;
-        // Metadata call failed (e.g. NWPS 429): fall back to the flood category the gauge list already reports.
-        var listCat = g.metaFailed && obs && ['no_flooding', 'action', 'minor', 'moderate', 'major'].indexOf(obs.floodCategory) >= 0 ? obs.floodCategory : null;
+        if (g.catsLoaded) cache[g.lid] = { cats: cats || null, at: now };
+        // Metadata not loaded (e.g. NWPS 429): the badge falls back to the flood category the gauge list already reports.
+        var fs = L_.gaugeFloodStatus(stage, cats, !!g.catsLoaded, obs && obs.floodCategory);
+        var hasCats = fs.ft != null || !!(cats && cats.minor && cats.minor.stage > -900);
         // Forecast: use the CREST of the official forecast series, not just its next point.
         var peak = g.series ? L_.forecastPeak(g.series.fc, now) : null;
         var fstage = peak ? peak.v : (fc && fc.primary > -900 ? fc.primary : null);
@@ -138,13 +148,17 @@
         return {
           lid: g.lid, name: g.name, lat: g.latitude, lon: g.longitude, km: g.km, unit: (obs && obs.primaryUnit) || 'ft',
           stage: stage, fstage: fstage, fTime: peak ? peak.t : null, obsTime: obs && obs.validTime ? Date.parse(obs.validTime) : null,
-          cats: hasCats ? cats : null,
-          category: hasCats ? L_.riverCategory(stage, cats) : listCat || 'unknown', metaFailed: !!g.metaFailed,
+          cats: hasCats ? cats : null, fsNote: fs.note, ft: fs.ft,
+          category: fs.category, metaFailed: !!g.metaFailed,
           forecastCategory: hasCats && fstage != null ? L_.riverCategory(fstage, cats) : null
         };
       });
+      catsCacheSave(cache);
+      return out;
     });
   }
+  function catsCacheLoad() { try { return JSON.parse(localStorage.getItem(CATS_KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function catsCacheSave(c) { try { localStorage.setItem(CATS_KEY, JSON.stringify(c)); } catch (e) { /* private mode: just refetch next time */ } }
 
   // ---------- Harvey replay ----------
   function demoGauges(lat, lon) {
@@ -322,12 +336,14 @@
       $('rivers').innerHTML = d.gauges.map(function (g) {
         var col = CAT_COLOR[g.category] || CAT_COLOR.unknown, txt = CAT_TEXT[g.category] || '#fff';
         var ft = g.cats ? L_.feetToFlood(g.stage, g.cats) : null;
+        var note = g.demo ? null : g.fsNote !== undefined ? g.fsNote : ft == null && g.stage != null ? 'no_fs' : null; // older snapshots lack fsNote
         var age = L_.ageHours(g.obsTime, refNow), stale = !g.demo && (age == null || age > STALE_H);
         var lines = [];
         lines.push(esc(t('stage')) + ': <b>' + (g.stage != null ? num(g.stage) + ' ' + esc(unit(g.unit)) : '–') + '</b>' +
-          (ft != null ? ' · ' + esc(ft > 0 ? fmt(t('below_fs'), { ft: num(ft), fs: g.cats.minor.stage }) : fmt(t('above_fs'), { ft: num(-ft), fs: g.cats.minor.stage })) : g.stage != null ? ' · ' + esc(t('no_fs')) : ''));
-        if (g.fstage != null && g.cats) lines.push(esc(t(g.demo ? 'next48' : 'fcst_crest')) + ': ' + num(g.fstage) + ' ' + esc(unit(g.unit)) + ' (' + esc(cat[g.forecastCategory] || '') + ')' +
-          (g.fTime ? ' · ' + esc(fmtTime(g.fTime)) : ''));
+          (ft != null ? ' · ' + esc(ft > 0 ? fmt(t('below_fs'), { ft: num(ft), fs: g.cats.minor.stage }) : fmt(t('above_fs'), { ft: num(-ft), fs: g.cats.minor.stage }))
+            : note === 'not_loaded' ? ' · ' + esc(t('fs_not_loaded')) : note === 'no_fs' ? ' · ' + esc(t('no_fs')) : ''));
+        if (g.fstage != null) lines.push(esc(t(g.demo ? 'next48' : 'fcst_crest')) + ': ' + num(g.fstage) + ' ' + esc(unit(g.unit)) +
+          (cat[g.forecastCategory] ? ' (' + esc(cat[g.forecastCategory]) + ')' : '') + (g.fTime ? ' · ' + esc(fmtTime(g.fTime)) : ''));
         if (g.obsTime) lines.push(esc(t('observed')) + ' ' + esc(fmtTime(g.obsTime)) + (stale ? ' · <span class="stale">' + esc(t('stale')) + '</span>' : ''));
         return '<button type="button" class="gauge" data-lid="' + esc(g.lid) + '" aria-pressed="' + (g.lid === state.selected) + '">' +
           '<span class="nm">' + esc(g.name) + '</span>' +
