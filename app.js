@@ -34,7 +34,7 @@
   var DEMO_CREST = DEMO.nowMs;
   // Replay point: inside FEMA Zone AE next to the Brazos in Richmond (checked against the NFHL), so the replay shows the full escalation.
   var DEMO_LOC = { lat: 29.5862, lon: -95.7655, label: 'Richmond · Brazos floodplain' };
-  var state = { lang: 'en', lat: 29.6197, lon: -95.6349, label: 'Sugar Land', demo: false, demoNow: DEMO_CREST, data: null, selected: null, runId: 0, series: {}, timer: null, playing: null };
+  var state = { lang: 'en', lat: 29.6197, lon: -95.6349, label: 'Sugar Land', demo: false, demoNow: DEMO_CREST, data: null, selected: null, runId: 0, pick: 0, series: {}, timer: null, playing: null };
   var map, layers = {};
   var SNAP_KEY = 'beacon.snapshot.v1', CATS_KEY = 'beacon.floodstages.v1', CATS_TTL = 7 * 864e5;
 
@@ -474,11 +474,12 @@
   // ---------- map ----------
   function initMap() {
     if (!window.L) { $('map').innerHTML = '<p class="empty pad">' + esc(t('map_off')) + '</p>'; return; }
-    map = L.map('map', { zoomControl: true, attributionControl: true, scrollWheelZoom: false }).setView([state.lat, state.lon], 12);
+    map = L.map('map', { zoomControl: false, attributionControl: true, scrollWheelZoom: false }).setView([state.lat, state.lon], 12);
+    setZoomControl();
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
     setMapAttr();
     layers.group = L.layerGroup().addTo(map);
-    map.on('click', function (e) { run(e.latlng.lat, e.latlng.lng, e.latlng.lat.toFixed(4) + ', ' + e.latlng.lng.toFixed(4)); });
+    map.on('click', function (e) { state.pick++; run(e.latlng.lat, e.latlng.lng, e.latlng.lat.toFixed(4) + ', ' + e.latlng.lng.toFixed(4)); });
   }
   // FEMA credit follows the page language (OSM credit stays as OSM asks).
   var mapAttr = null;
@@ -487,6 +488,16 @@
     if (mapAttr) map.attributionControl.removeAttribution(mapAttr);
     mapAttr = esc(t('map_attr')); map.attributionControl.addAttribution(mapAttr);
   }
+  // Zoom buttons follow the page language (Leaflet's defaults are English-only).
+  var zoomCtl = null;
+  function setZoomControl() {
+    if (!map) return;
+    if (zoomCtl) map.removeControl(zoomCtl);
+    zoomCtl = L.control.zoom({ zoomInTitle: t('zoom_in'), zoomOutTitle: t('zoom_out') }).addTo(map);
+  }
+  // Markers only show a hover tooltip, and Chromium makes such SVG paths Tab stops with no name. The same
+  // place and gauges are buttons in the cards below, so keep markers out of the Tab order and the a11y tree.
+  function quietMarker(m) { var el = m.getElement && m.getElement(); if (el) { el.setAttribute('tabindex', '-1'); el.setAttribute('aria-hidden', 'true'); } return m; }
   function setMap(lat, lon) { if (map) map.setView([lat, lon], 12); }
   function ringsToLatLngs(geom) { return (geom && geom.rings || []).map(function (r) { return r.map(function (p) { return [p[1], p[0]]; }); }); }
   function drawMapLayers() {
@@ -495,11 +506,12 @@
     var d = state.data; layers.group.clearLayers();
     (d.near || []).forEach(function (g) { L.polygon(ringsToLatLngs(g), { color: '#3d6ea8', weight: 1, fillOpacity: 0.18, interactive: false }).addTo(layers.group); });
     if (d.zone.geom) L.polygon(ringsToLatLngs(d.zone.geom), { color: d.zone.info.sfha ? '#b4500f' : '#1f8a4c', weight: 2, fillOpacity: 0.25, interactive: false }).addTo(layers.group);
-    L.circleMarker([state.lat, state.lon], { radius: 9, color: '#fff', weight: 3, fillColor: '#0b2a3c', fillOpacity: 1 }).addTo(layers.group).bindTooltip(esc(placeText(state.label)));
+    var you = L.circleMarker([state.lat, state.lon], { radius: 9, color: '#fff', weight: 3, fillColor: '#0b2a3c', fillOpacity: 1 }).addTo(layers.group).bindTooltip(esc(placeText(state.label)));
+    quietMarker(you);
     (d.gauges || []).forEach(function (g) {
-      L.circleMarker([g.lat, g.lon], { radius: 7, color: '#fff', weight: 2, fillColor: { no_flooding: '#1f8a4c', action: '#c99a06', minor: '#b4500f', moderate: '#b3122e', major: '#6b0018' }[g.category] || '#7a8a94', fillOpacity: 1 })
-        .addTo(layers.group).bindTooltip(esc(g.name) + ': ' + (g.stage != null ? num(g.stage) + ' ft' : '–'))
-        .on('click', function (e) { L.DomEvent.stopPropagation(e); selectGauge(g.lid); });
+      quietMarker(L.circleMarker([g.lat, g.lon], { radius: 7, color: '#fff', weight: 2, fillColor: { no_flooding: '#1f8a4c', action: '#c99a06', minor: '#b4500f', moderate: '#b3122e', major: '#6b0018' }[g.category] || '#7a8a94', fillOpacity: 1 })
+        .addTo(layers.group).bindTooltip(esc(g.name) + ': ' + (g.stage != null ? num(g.stage) + ' ' + esc(unit('ft')) : '–'))
+        .on('click', function (e) { L.DomEvent.stopPropagation(e); selectGauge(g.lid); }));
     });
   }
 
@@ -597,17 +609,27 @@
   }
 
   // ---------- inputs ----------
+  // Two geocoders. "No match" only when at least one of them actually answered; if neither could be reached
+  // (offline, rate limit, outage) say so instead of blaming the address. err.reached tells the caller which.
   function geocode(q) {
-    return getJSON(API.geocode(q)).then(function (r) {
+    var reached = false;
+    function noMatch() { var e = new Error('no match'); e.reached = true; return e; }
+    return getJSON(API.geocode(q), 8000).then(function (r) {
+      if (r && r.error) throw new Error('geocoder error');
+      reached = true;
       var c = r.candidates && r.candidates[0];
       if (c && c.score >= 80) return { lat: c.location.y, lon: c.location.x, label: c.address };
-      throw new Error('no match');
+      throw noMatch();
     }).catch(function () {
-      return getJSON(API.nominatim(q)).then(function (r) {
-        if (!r.length) throw new Error('no match');
+      return getJSON(API.nominatim(q), 8000).then(function (r) {
+        if (!Array.isArray(r) || !r.length) throw noMatch();
         return { lat: +r[0].lat, lon: +r[0].lon, label: r[0].display_name.split(',').slice(0, 3).join(',') };
-      });
+      }, function () { var e = new Error('unreachable'); e.reached = reached; throw e; });
     });
+  }
+  function geoErr(e) {
+    if (e && e.reached) return t('err_geo');
+    return navigator.onLine === false ? t('err_geo_offline') : t('err_geo_net');
   }
 
   function updateURL() {
@@ -648,7 +670,7 @@
     $('planBtn').hidden = state.demo;
     $('demoBanner').hidden = !state.demo; $('demoText').textContent = t('demo_banner');
     $('playBtn').textContent = state.playing ? t('pause') : t('play');
-    $('map').setAttribute('aria-label', t('map_label')); setMapAttr();
+    $('map').setAttribute('aria-label', t('map_label')); setMapAttr(); setZoomControl();
     $('howTest').textContent = fmt(t('how_test'), { n: TEST_COUNT });
     if (!state.data) $('lvlDesc').textContent = t('loading_desc');
     $('lead').innerHTML = '';
@@ -675,22 +697,25 @@
 
     $('searchForm').addEventListener('submit', function (e) {
       e.preventDefault();
-      var q = $('addr').value.trim(); if (!q) return;
+      var q = $('addr').value.trim(); if (!q) { msg(t('err_empty'), true); $('addr').focus(); return; }
       if (!/\b(tx|texas)\b/i.test(q)) q += ', TX';
       msg(t('loading'));
-      geocode(q).then(function (r) { run(r.lat, r.lon, r.label); }, function () { msg(t('err_geo'), true); });
+      var gid = ++state.pick;  // a newer search, chip, map click or location pick wins over this one
+      geocode(q).then(function (r) { if (gid === state.pick) run(r.lat, r.lon, r.label); },
+        function (e) { if (gid === state.pick) msg(geoErr(e), true); });
     });
     $('locBtn').addEventListener('click', function () {
       if (!navigator.geolocation) { msg(t('err_loc'), true); return; }
       msg(t('locating'));
-      navigator.geolocation.getCurrentPosition(function (pos) { run(pos.coords.latitude, pos.coords.longitude, 'here'); },
-        function () { msg(t('err_loc'), true); }, { timeout: 10000, maximumAge: 300000 });
+      var gid = ++state.pick;
+      navigator.geolocation.getCurrentPosition(function (pos) { if (gid === state.pick) run(pos.coords.latitude, pos.coords.longitude, 'here'); },
+        function () { if (gid === state.pick) msg(t('err_loc'), true); }, { timeout: 10000, maximumAge: 300000 });
     });
     Array.prototype.forEach.call(document.querySelectorAll('.chip[data-ll]'), function (b) {
-      b.addEventListener('click', function () { var ll = b.getAttribute('data-ll').split(','); run(+ll[0], +ll[1], b.textContent); });
+      b.addEventListener('click', function () { state.pick++; var ll = b.getAttribute('data-ll').split(','); run(+ll[0], +ll[1], b.textContent); });
     });
     $('demoBtn').addEventListener('click', function () {
-      stopPlay();
+      stopPlay(); state.pick++;
       state.demo = !state.demo; state.demoNow = DEMO_CREST; $('replay').value = DEMO_CREST; state.data = null; state.selected = null;
       applyLang();
       if (state.demo) { state.prev = { lat: state.lat, lon: state.lon, label: state.label }; run(DEMO_LOC.lat, DEMO_LOC.lon, DEMO_LOC.label); }

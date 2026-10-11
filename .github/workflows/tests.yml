@@ -1,0 +1,23 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node logic.test.js                       # 36 unit tests for the risk logic
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install playwright && python -m playwright install --with-deps chromium && sudo apt-get install -y poppler-utils
+      - name: Use Playwright's Chromium and cache Leaflet 1.9.4 for the stubbed tests
+        run: |
+          echo "CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright as s; p=s().start(); print(p.chromium.executable_path); p.stop()')" >> "$GITHUB_ENV"
+          curl -sSL -o /tmp/leaflet.js https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
+      # Every API is stubbed in these (no NOAA/NWS/FEMA calls from CI). tests/live_regression.py hits the real services, so it is run by hand.
+      - run: python tests/dom_429_test.py
+      - run: python tests/dom_far_gauge_test.py
+      - run: python tests/dom_replay_test.py
+      - run: python tests/dom_search_map_test.py
+      - run: python tests/plan_print_test.py
