@@ -149,6 +149,22 @@ t('all sources answering is complete', () => {
   const r = L.overallRisk({ alerts: [], gauges: [], missing: [] });
   assert.strictEqual(r.incomplete, false);
 });
+t('gauge card: list-only gauge (metadata not loaded) keeps the list flood category and says "not loaded", never "no flood stage set"', () => {
+  const r = L.gaugeFloodStatus(82.33, null, false, 'no_flooding'); // e.g. BAKT2 Barker, 10.4 mi from Sugar Land
+  assert.deepStrictEqual(r, { category: 'no_flooding', ft: null, note: 'not_loaded' });
+  assert.strictEqual(L.gaugeFloodStatus(82.33, null, false, 'fcst_not_current').category, 'unknown');
+  assert.strictEqual(L.gaugeFloodStatus(null, null, false, 'no_flooding').note, null);
+  assert.strictEqual(L.gaugeFloodStatus(-999, null, false, 'no_flooding').note, null);
+});
+t('gauge card: loaded flood stages give feet below/above; loaded-but-none says "no flood stage set"', () => {
+  const barker = { action: { stage: 90.2 }, minor: { stage: 93.2 }, moderate: { stage: -9999 }, major: { stage: -9999 } };
+  assert.deepStrictEqual(L.gaugeFloodStatus(82.33, barker, true, 'no_flooding'), { category: 'no_flooding', ft: 10.9, note: 'below' });
+  assert.deepStrictEqual(L.gaugeFloodStatus(55.19, cats, true, 'no_flooding'), { category: 'major', ft: -10.2, note: 'above' });
+  const none = L.gaugeFloodStatus(5, { minor: { stage: -9999 } }, true, 'not_defined');
+  assert.strictEqual(none.note, 'no_fs'); assert.strictEqual(none.category, 'unknown');
+  // a loaded gauge with no stages must not borrow the list category
+  assert.strictEqual(L.gaugeFloodStatus(5, null, true, 'minor').category, 'unknown');
+});
 const appCount = +(/var TEST_COUNT = (\d+);/.exec(require('fs').readFileSync(__dirname + '/app.js', 'utf8')) || [])[1];
 assert.strictEqual(appCount, n, 'app.js TEST_COUNT (shown in the "How it works" panel) must match the number of tests');
 console.log(`\n${n} tests passed`);
