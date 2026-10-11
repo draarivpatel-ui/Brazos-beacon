@@ -17,48 +17,49 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://aariv.me/Brazos-beacon/">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23ffb703'/></svg>">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <a class="skip" href="#main">Skip to results</a>
+  <a class="skip" href="#main" data-i18n="skip">Skip to results</a>
   <header class="top">
     <div class="brand">
       <span class="logo" aria-hidden="true">◉</span>
       <div>
         <h1>Brazos Beacon</h1>
-        <p class="tag" data-i18n="tagline"></p>
+        <p class="tag" data-i18n="tagline">Live flood &amp; heat risk for your Fort Bend street, in plain language.</p>
       </div>
     </div>
-    <div class="lang" role="group" aria-label="Language">
-      <button type="button" data-lang="en" lang="en" aria-pressed="true" aria-label="English">EN</button>
-      <button type="button" data-lang="es" lang="es" aria-pressed="false" aria-label="Español">ES</button>
+    <div class="lang" role="group" aria-label="Language" data-i18n-aria="lang_group">
+      <button type="button" data-lang="en" lang="en" aria-pressed="true">EN<span class="sr"> English</span></button>
+      <button type="button" data-lang="es" lang="es" aria-pressed="false">ES<span class="sr"> Español</span></button>
     </div>
   </header>
 
-  <div id="demoBanner" class="demo-banner" hidden>
+  <section id="demoBanner" class="demo-banner" aria-label="Harvey replay controls" data-i18n-aria="replay_region" hidden>
     <p id="demoText"></p>
     <div class="replay">
-      <button type="button" id="playBtn" aria-pressed="false"></button>
-      <button type="button" id="crestBtn" data-i18n="crest_btn"></button>
-      <label for="replay" class="sr" data-i18n="replay_lbl"></label>
+      <button type="button" id="playBtn">▶ Play the flood</button>
+      <button type="button" id="crestBtn" data-i18n="crest_btn">Jump to crest</button>
+      <label for="replay" class="sr" data-i18n="replay_lbl">Replay time</label>
       <input type="range" id="replay">
       <output id="replayTime" for="replay" aria-live="off"></output>
     </div>
     <div id="lead" class="lead" role="note"></div>
-  </div>
+  </section>
 
-  <section class="search" aria-label="Choose a location">
+  <section class="search" aria-label="Choose a location" data-i18n-aria="search_region">
     <form id="searchForm" autocomplete="on">
-      <label for="addr" class="sr" data-i18n="addr_label"></label>
-      <input id="addr" name="addr" type="search" autocomplete="street-address" enterkeyhint="search" required>
-      <button type="submit" class="primary" data-i18n="search_btn"></button>
-      <button type="button" id="locBtn" data-i18n="locate_btn"></button>
+      <label for="addr" class="sr" data-i18n="addr_label">Address or ZIP code</label>
+      <input id="addr" name="addr" type="search" placeholder="Address or ZIP, e.g. 2200 Texas Pkwy, Missouri City" autocomplete="street-address" enterkeyhint="search" required>
+      <button type="submit" class="primary" data-i18n="search_btn">Check</button>
+      <button type="button" id="locBtn" data-i18n="locate_btn">Use my location</button>
     </form>
     <div class="presets">
-      <span data-i18n="or_pick"></span>
+      <span data-i18n="or_pick">Or pick a city:</span>
       <button type="button" class="chip" data-ll="29.6197,-95.6349">Sugar Land</button>
       <button type="button" class="chip" data-ll="29.6186,-95.5377">Missouri City</button>
       <button type="button" class="chip" data-ll="29.5822,-95.7608">Richmond</button>
@@ -67,7 +68,7 @@
       <button type="button" class="chip" data-ll="29.6165,-95.5577">Stafford</button>
       <button type="button" class="chip" data-ll="29.3989,-95.8377">Needville</button>
       <button type="button" class="chip" data-ll="29.7858,-95.8245">Katy</button>
-      <button type="button" class="chip demo" id="demoBtn" data-i18n="demo_btn"></button>
+      <button type="button" class="chip demo" id="demoBtn" data-i18n="demo_btn">Replay Harvey (2017)</button>
     </div>
     <p id="msg" class="msg" role="status" aria-live="polite"></p>
   </section>
@@ -77,31 +78,31 @@
       <div class="dial"><span class="sr" id="lvlLabel"></span><span id="lvlNum">–</span></div>
       <div class="hero-txt">
         <p class="place" id="placeName">Fort Bend County, TX</p>
-        <h2 id="lvlName" data-i18n="loading"></h2>
-        <p id="lvlDesc"></p>
+        <h2 id="lvlName" data-i18n="loading">Checking live sources…</h2>
+        <p id="lvlDesc">Asking NOAA, NWS and FEMA about this spot. This usually takes a few seconds.</p>
         <p id="offlineNote" class="offline-note" role="note" hidden></p>
         <ul id="drivers" class="drivers"></ul>
       </div>
-      <button type="button" id="shareBtn" class="ghost" data-i18n="share"></button>
+      <button type="button" id="shareBtn" class="ghost" data-i18n="share">Copy share link</button>
     </section>
 
     <div class="grid">
-      <section class="card c-map" aria-label="Map">
+      <section class="card c-map">
         <div id="map" role="region" aria-label="Map"></div>
       </section>
 
       <section class="card c-zone">
-        <h3 data-i18n="card_zone"></h3>
+        <h3 data-i18n="card_zone">Your FEMA flood zone</h3>
         <div id="zone" class="zone"></div>
       </section>
 
       <section class="card c-wx">
-        <h3 data-i18n="card_wx"></h3>
+        <h3 data-i18n="card_wx">Next 72 hours</h3>
         <div id="wx" class="wx"></div>
       </section>
 
       <section class="card c-rivers">
-        <h3 data-i18n="card_rivers"></h3>
+        <h3 data-i18n="card_rivers">Nearest river gauges</h3>
         <div id="rivers" class="rivers"></div>
         <figure class="chart-wrap" id="chartWrap" hidden>
           <figcaption id="chartTitle"></figcaption>
@@ -111,46 +112,46 @@
       </section>
 
       <section class="card c-alerts">
-        <h3 data-i18n="card_alerts"></h3>
+        <h3 data-i18n="card_alerts">Active NWS alerts</h3>
         <div id="alerts" aria-live="polite"></div>
       </section>
 
       <section class="card c-actions">
-        <h3 data-i18n="card_actions"></h3>
+        <h3 data-i18n="card_actions">Your action checklist</h3>
         <ol id="actions" class="actions"></ol>
-        <button type="button" id="planBtn" class="plan-btn" data-i18n="plan_btn"></button>
+        <button type="button" id="planBtn" class="plan-btn" data-i18n="plan_btn">Make a printable family flood plan</button>
       </section>
 
       <section class="card c-help">
-        <h3 data-i18n="card_help"></h3>
+        <h3 data-i18n="card_help">Fort Bend help &amp; sign-ups</h3>
         <ul id="help" class="help"></ul>
       </section>
 
       <section class="card c-how" aria-labelledby="howTitle">
-        <h3 id="howTitle" data-i18n="how_title"></h3>
+        <h3 id="howTitle" data-i18n="how_title">How it works · tested</h3>
         <div class="how">
-          <div><h4 data-i18n="how_rule_h"></h4><p data-i18n="how_rule"></p></div>
-          <div><h4 data-i18n="how_ai_h"></h4><p data-i18n="how_ai"></p></div>
-          <div><h4 data-i18n="how_test_h"></h4><p id="howTest"></p></div>
-          <div><h4 data-i18n="how_src_h"></h4>
+          <div><h4 data-i18n="how_rule_h">Never a false all-clear</h4><p data-i18n="how_rule">If any source that could raise your level does not answer, the page says "Could not check everything" and shows "?" instead of a green All clear. Only river gauges within about 9 miles can change your level.</p></div>
+          <div><h4 data-i18n="how_ai_h">Rules, not AI guesses</h4><p data-i18n="how_ai">In an emergency, answers have to be explainable. Your level comes from published thresholds (NWS flood categories for each gauge, NWS Houston heat-index criteria, FEMA flood zones, active NWS alerts), so every answer traces back to a source. Nothing is generated.</p></div>
+          <div><h4 data-i18n="how_test_h">Tested</h4><p id="howTest"></p></div>
+          <div><h4 data-i18n="how_src_h">Data sources</h4>
             <ul class="how-src">
-              <li><a href="https://water.noaa.gov/about/api" target="_blank" rel="noopener">NOAA NWPS</a>: river gauges, flood stages, forecasts</li>
-              <li><a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">NWS API</a>: alerts, heat index, rain</li>
-              <li><a href="https://hazards.fema.gov/femaportal/wps/portal/NFHLWMS" target="_blank" rel="noopener">FEMA NFHL</a>: flood zones</li>
-              <li><a href="https://waterdata.usgs.gov/monitoring-location/08114000/" target="_blank" rel="noopener">USGS 08114000</a>: Harvey replay</li>
-              <li>Esri · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>: address search, map</li>
+              <li><a href="https://water.noaa.gov/about/api" target="_blank" rel="noopener">NOAA NWPS</a>: <span data-i18n="src_nwps">river gauges, flood stages, forecasts</span></li>
+              <li><a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">NWS API</a>: <span data-i18n="src_nws">alerts, heat index, rain</span></li>
+              <li><a href="https://hazards.fema.gov/femaportal/wps/portal/NFHLWMS" target="_blank" rel="noopener">FEMA NFHL</a>: <span data-i18n="src_nfhl">flood zones</span></li>
+              <li><a href="https://waterdata.usgs.gov/monitoring-location/08114000/" target="_blank" rel="noopener">USGS 08114000</a>: <span data-i18n="src_usgs">Harvey replay</span></li>
+              <li>Esri · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>: <span data-i18n="src_geo">address search, map</span></li>
             </ul>
-            <p class="fine" data-i18n="how_src_tail"></p>
+            <p class="fine" data-i18n="how_src_tail">All free and public. No API keys, no server, no tracking.</p>
           </div>
         </div>
-        <p class="fine"><a href="https://github.com/draarivpatel-ui/Brazos-beacon" target="_blank" rel="noopener" data-i18n="how_code"></a></p>
+        <p class="fine"><a href="https://github.com/draarivpatel-ui/Brazos-beacon" target="_blank" rel="noopener" data-i18n="how_code">Read the code and tests on GitHub</a></p>
       </section>
     </div>
   </main>
 
   <footer class="foot">
-    <p id="disclaimer"></p>
-    <p class="src"><span data-i18n="sources"></span>:
+    <p id="disclaimer">Brazos Beacon is a student project that summarizes public data. It is not an official warning system. Always follow the National Weather Service and Fort Bend County officials.</p>
+    <p class="src"><span data-i18n="sources">Sources</span>:
       <a href="https://water.noaa.gov/about/api" target="_blank" rel="noopener">NOAA National Water Prediction Service</a> ·
       <a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">National Weather Service API</a> ·
       <a href="https://hazards.fema.gov/femaportal/wps/portal/NFHLWMS" target="_blank" rel="noopener">FEMA National Flood Hazard Layer</a> ·
@@ -163,32 +164,31 @@
 
   <dialog id="planDlg" aria-labelledby="planDlgTitle">
     <form id="planForm" method="dialog">
-      <h2 id="planDlgTitle" data-i18n="plan_title"></h2>
-      <p class="fine" data-i18n="plan_intro"></p>
+      <h2 id="planDlgTitle" data-i18n="plan_title">Family flood plan</h2>
+      <p class="fine" data-i18n="plan_intro">Fill in what you can (or leave blanks to write by hand), then print it or save it as a PDF and put it on the fridge. Your flood zone, nearest river gauge and key numbers are added for this spot.</p>
       <div class="plan-fields">
-        <label><span data-i18n="pf_people"></span><textarea name="people" rows="2" maxlength="300"></textarea></label>
-        <label><span data-i18n="pf_contact"></span><input name="contact" maxlength="120"></label>
-        <label><span data-i18n="pf_meet_near"></span><input name="meetNear" maxlength="120"></label>
-        <label><span data-i18n="pf_meet_far"></span><input name="meetFar" maxlength="120"></label>
-        <label><span data-i18n="pf_evac"></span><input name="evac" maxlength="160"></label>
-        <label><span data-i18n="pf_needs"></span><textarea name="needs" rows="2" maxlength="300"></textarea></label>
-        <label><span data-i18n="pf_pets"></span><input name="pets" maxlength="120"></label>
+        <label><span data-i18n="pf_people">Who lives here</span><textarea name="people" rows="2" maxlength="300"></textarea></label>
+        <label><span data-i18n="pf_contact">Out-of-area contact (name and phone)</span><input name="contact" maxlength="120"></label>
+        <label><span data-i18n="pf_meet_near">Meeting place near home</span><input name="meetNear" maxlength="120"></label>
+        <label><span data-i18n="pf_meet_far">Meeting place outside the neighborhood</span><input name="meetFar" maxlength="120"></label>
+        <label><span data-i18n="pf_evac">Where we will go if we evacuate</span><input name="evac" maxlength="160"></label>
+        <label><span data-i18n="pf_needs">Medicines and special needs</span><textarea name="needs" rows="2" maxlength="300"></textarea></label>
+        <label><span data-i18n="pf_pets">Pets</span><input name="pets" maxlength="120"></label>
       </div>
-      <p class="fine" data-i18n="plan_privacy"></p>
+      <p class="fine" data-i18n="plan_privacy">What you type stays in this browser only. It is never sent anywhere.</p>
       <div class="plan-actions">
-        <button type="button" id="planPrint" class="primary" data-i18n="plan_print"></button>
-        <button type="button" id="planClear" data-i18n="plan_clear"></button>
-        <button type="submit" value="close" data-i18n="plan_close"></button>
+        <button type="button" id="planPrint" class="primary" data-i18n="plan_print">Print / save as PDF</button>
+        <button type="button" id="planClear" data-i18n="plan_clear">Clear my answers</button>
+        <button type="submit" value="close" data-i18n="plan_close">Close</button>
       </div>
     </form>
   </dialog>
   <article id="planSheet" class="plan-sheet" aria-hidden="true"></article>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="vendor/qrcode.js"></script>
-  <script src="logic.js"></script>
-  <script src="i18n.js"></script>
-  <script src="demo.js"></script>
-  <script src="app.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+  <script src="logic.js" defer></script>
+  <script src="i18n.js" defer></script>
+  <script src="demo.js" defer></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
