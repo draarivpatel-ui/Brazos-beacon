@@ -67,7 +67,7 @@ def serve():
     return srv
 
 def launch(p):
-    exe = '/usr/bin/chromium' if os.path.exists('/usr/bin/chromium') else None
+    exe = os.environ.get('CHROMIUM_PATH') or ('/usr/bin/chromium' if os.path.exists('/usr/bin/chromium') else None)
     return p.chromium.launch(executable_path=exe, args=['--no-sandbox'])
 
 def run_case(browser, base, fail, fx=None, lang='en', search=None, fema_200_error=False):
