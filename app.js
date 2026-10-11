@@ -211,6 +211,7 @@
     $('main').setAttribute('aria-busy', 'true');
     setMap(lat, lon);
     $('placeName').textContent = state.label === 'here' ? t('your_location') : state.label;
+    if (!state.data) $('lvlDesc').textContent = t('loading_desc');
     if (!state.data) ['zone', 'wx', 'rivers', 'alerts'].forEach(function (k) { $(k).innerHTML = '<p class="skel">' + esc(t('loading')) + '</p>'; });
 
     var now = state.demo ? state.demoNow : Date.now();
@@ -509,11 +510,22 @@
       '<p class="ps-small ps-url">' + esc(t('ps_live')) + ': ' + esc(url) + '</p>' +
       '<footer class="ps-foot">' + esc(t('ps_foot')) + '</footer>';
   }
+  // The QR library is only needed for the printed plan, so it loads when the plan dialog opens, not on first paint.
+  var qrLoading = null;
+  function loadQR() {
+    if (window.qrcode) return Promise.resolve();
+    if (!qrLoading) qrLoading = new Promise(function (res) {
+      var sc = document.createElement('script'); sc.src = 'vendor/qrcode.js';
+      sc.onload = sc.onerror = function () { res(); }; document.head.appendChild(sc);
+    });
+    return qrLoading;
+  }
   function setupPlan() {
     var dlg = $('planDlg'), form = $('planForm'), saved = planLoad();
     Array.prototype.forEach.call(form.elements, function (el) { if (el.name && saved[el.name]) el.value = saved[el.name]; });
     form.addEventListener('input', planSave);
     $('planBtn').addEventListener('click', function () {
+      loadQR();
       if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
       var first = form.querySelector('textarea, input'); if (first) first.focus();
     });
@@ -522,10 +534,13 @@
       try { localStorage.removeItem(PLAN_KEY); } catch (e) { }
     });
     $('planPrint').addEventListener('click', function () {
-      buildPlanSheet(planSave());
-      document.body.classList.add('print-plan');
+      var answers = planSave();
       if (dlg.open && dlg.close) dlg.close();
-      setTimeout(function () { window.print(); }, 50);
+      loadQR().then(function () {
+        buildPlanSheet(answers);
+        document.body.classList.add('print-plan');
+        setTimeout(function () { window.print(); }, 50);
+      });
     });
     window.addEventListener('afterprint', function () { document.body.classList.remove('print-plan'); });
   }
@@ -561,7 +576,7 @@
     $('playBtn').addEventListener('click', function () {
       if (state.playing) { stopPlay(); return; }
       if (state.demoNow >= +r.max) state.demoNow = +r.min;
-      $('playBtn').textContent = t('pause'); $('playBtn').setAttribute('aria-pressed', 'true');
+      $('playBtn').textContent = t('pause');
       state.playing = setInterval(function () {
         state.demoNow = Math.min(+r.max, state.demoNow + 6 * 3600e3); r.value = state.demoNow; recomputeDemo();
         if (state.demoNow >= +r.max) stopPlay();
@@ -569,11 +584,12 @@
     });
     $('crestBtn').addEventListener('click', function () { stopPlay(); state.demoNow = DEMO_CREST; r.value = DEMO_CREST; recomputeDemo(); });
   }
-  function stopPlay() { if (state.playing) clearInterval(state.playing); state.playing = null; $('playBtn').textContent = t('play'); $('playBtn').setAttribute('aria-pressed', 'false'); }
+  function stopPlay() { if (state.playing) clearInterval(state.playing); state.playing = null; $('playBtn').textContent = t('play'); }
 
   function applyLang() {
     document.documentElement.lang = state.lang;
     Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-aria]'), function (el) { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
     Array.prototype.forEach.call(document.querySelectorAll('[data-lang]'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === state.lang)); });
     $('addr').placeholder = t('search_ph');
     $('disclaimer').textContent = t('disclaimer');
@@ -583,6 +599,7 @@
     $('playBtn').textContent = state.playing ? t('pause') : t('play');
     $('map').setAttribute('aria-label', t('map_label'));
     $('howTest').textContent = fmt(t('how_test'), { n: TEST_COUNT });
+    if (!state.data) $('lvlDesc').textContent = t('loading_desc');
     $('lead').innerHTML = '';
     if (state.data) { if (state.demo) recomputeDemo(); else { render(); if (state.selected) selectGauge(state.selected); } }
   }
@@ -626,7 +643,7 @@
       applyLang();
       if (state.demo) { state.prev = { lat: state.lat, lon: state.lon, label: state.label }; run(DEMO_LOC.lat, DEMO_LOC.lon, DEMO_LOC.label); }
       else { var pv = state.prev || { lat: 29.6197, lon: -95.6349, label: 'Sugar Land' }; run(pv.lat, pv.lon, pv.label); }
-      if (state.demo) $('demoBanner').scrollIntoView({ block: 'nearest' });
+      if (state.demo) { $('demoBanner').scrollIntoView({ block: 'nearest' }); $('playBtn').focus(); }
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-lang]'), function (b) {
       b.addEventListener('click', function () { state.lang = b.getAttribute('data-lang'); applyLang(); updateURL(); });
