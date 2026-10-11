@@ -1,12 +1,13 @@
 /* Brazos Beacon - English / Español strings */
 window.I18N = {
   en: {
-    loading_desc: 'Asking NOAA, NWS and FEMA about this spot. This usually takes a few seconds.',
+    loading_desc: 'Asking NOAA, NWS and FEMA about the rivers, alerts, rain, heat and flood zone at this spot. This usually takes a few seconds.',
     skip: 'Skip to results', lang_group: 'Language', search_region: 'Choose a location', replay_region: 'Harvey replay controls',
     src_nwps: 'river gauges, flood stages, forecasts', src_nws: 'alerts, heat index, rain', src_nfhl: 'flood zones', src_usgs: 'Harvey replay', src_geo: 'address search, map',
     level_word: 'Beacon level', ft: 'ft', fcst_short: 'forecast',
     addr_label: 'Address or ZIP code',
     your_location: 'Your location',
+    demo_place: 'Richmond · Brazos floodplain',
     incomplete_name: 'Could not check everything',
     incomplete_desc: 'Some live sources did not answer ({list}), so we cannot say it is all clear. Check weather.gov and FBC Alert, and try again in a few minutes.',
     incomplete_note: '(Some sources did not answer: {list}. Your real level could be higher.)',
@@ -157,12 +158,21 @@ window.I18N = {
     disclaimer: 'Brazos Beacon is a student project that summarizes public data. It is not an official warning system. Always follow the National Weather Service and Fort Bend County officials.'
   },
   es: {
-    loading_desc: 'Consultando a NOAA, el NWS y FEMA sobre este lugar. Suele tardar unos segundos.',
+    loading_desc: 'Consultando a NOAA, el NWS y FEMA sobre los ríos, las alertas, la lluvia, el calor y la zona de inundación de este lugar. Suele tardar unos segundos.',
     skip: 'Ir a los resultados', lang_group: 'Idioma', search_region: 'Elige un lugar', replay_region: 'Controles de la repetición de Harvey',
     src_nwps: 'medidores de río, niveles de inundación, pronósticos', src_nws: 'alertas, índice de calor, lluvia', src_nfhl: 'zonas de inundación', src_usgs: 'repetición de Harvey', src_geo: 'búsqueda de direcciones, mapa',
     level_word: 'Nivel Beacon', ft: 'pies', fcst_short: 'pronóstico',
     addr_label: 'Dirección o código postal',
     your_location: 'Tu ubicación',
+    demo_place: 'Richmond · llanura de inundación del Brazos',
+    // NWS Spanish product names (Aviso = Warning, Vigilancia = Watch, Advertencia = Advisory).
+    alert_names: { 'Flood Warning': 'Aviso de inundación', 'Flood Watch': 'Vigilancia de inundación', 'Flood Advisory': 'Advertencia de inundación',
+      'Flash Flood Warning': 'Aviso de inundación repentina', 'Flash Flood Watch': 'Vigilancia de inundación repentina', 'Flash Flood Emergency': 'Emergencia por inundación repentina',
+      'Heat Advisory': 'Advertencia de calor', 'Extreme Heat Warning': 'Aviso de calor extremo', 'Extreme Heat Watch': 'Vigilancia de calor extremo',
+      'Excessive Heat Warning': 'Aviso de calor excesivo', 'Excessive Heat Watch': 'Vigilancia de calor excesivo',
+      'Hurricane Warning': 'Aviso de huracán', 'Hurricane Watch': 'Vigilancia de huracán', 'Tropical Storm Warning': 'Aviso de tormenta tropical', 'Tropical Storm Watch': 'Vigilancia de tormenta tropical',
+      'Storm Surge Warning': 'Aviso de marejada ciclónica', 'Storm Surge Watch': 'Vigilancia de marejada ciclónica', 'Severe Thunderstorm Warning': 'Aviso de tormenta eléctrica severa',
+      'Severe Thunderstorm Watch': 'Vigilancia de tormenta eléctrica severa', 'Tornado Warning': 'Aviso de tornado', 'Tornado Watch': 'Vigilancia de tornado' },
     incomplete_name: 'No pudimos revisar todo',
     incomplete_desc: 'Algunas fuentes en vivo no respondieron ({list}), así que no podemos decir que todo está bien. Revisa weather.gov y FBC Alert, e intenta de nuevo en unos minutos.',
     incomplete_note: '(Algunas fuentes no respondieron: {list}. Tu nivel real podría ser más alto.)',
@@ -174,7 +184,7 @@ window.I18N = {
     below_fs: '{ft} pies debajo del nivel de inundación ({fs} pies)', above_fs: '{ft} pies POR ENCIMA del nivel de inundación ({fs} pies)', no_fs: 'este medidor no tiene nivel de inundación definido',
     fcst_crest: 'Máximo pronosticado por el NWS (7 días)', next48: 'Próximas 48 h (lo que pasó en realidad)', observed: 'Medido', stale: 'la lectura puede estar desactualizada',
     too_far: 'demasiado lejos para cambiar tu nivel',
-    alerts_en: 'El NWS publica las alertas en inglés.',
+    alerts_en: 'El NWS publica las alertas en inglés. Traducimos el nombre del aviso; el texto queda como lo publicó el NWS.',
     until: 'Hasta', details: 'Detalles',
     demo_stamp: 'Datos de la repetición: medidor USGS 08114000, 24 ago - 8 sep 2017.',
     auto_refresh: 'se actualiza cada 15 min mientras está abierta',
