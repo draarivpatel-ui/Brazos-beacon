@@ -1,10 +1,10 @@
 // Brazos Beacon service worker: keeps the app itself (page, scripts, styles, map library) available offline.
 // Network first, so a fresh deploy always wins when online; the cache is only the fallback.
 // Live agency data (NOAA, NWS, FEMA) is never cached here: the page keeps its own clearly labelled last-check snapshot.
-var CACHE = 'beacon-shell-v4';
+var CACHE = 'beacon-shell-v5';
 var SHELL = ['./', 'index.html', 'style.css', 'logic.js', 'i18n.js', 'demo.js', 'app.js', 'vendor/qrcode.js',
   'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'];
+  'vendor/leaflet.css', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) {
