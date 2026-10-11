@@ -12,6 +12,16 @@ Built for **WarriorHacks 2.0** (Hackathon track): *"Create a project that solves
 
 ---
 
+## Judge it in 60 seconds
+1. Open https://aariv.me/Brazos-beacon/ and enter any Fort Bend County address or ZIP.
+2. Open https://aariv.me/Brazos-beacon/?demo=harvey for the Hurricane Harvey replay.
+3. Toggle English/Español; every string has a Spanish twin.
+4. Run `node logic.test.js` (36 tests passed when re-run Oct 11, 2026).
+
+Honest limits: live data comes from public NWS/FEMA services and can lag or fail; the visual check was code-level, not a full browser run.
+
+---
+
 ## The problem
 
 Fort Bend County sits where the Brazos River, the San Bernard River, and Houston-area bayous meet. During Hurricane Harvey the Brazos at Richmond crested at **55.19 ft** on Sept 1, 2017 (flood stage is 45 ft), the highest since 1915. The county ordered mandatory evacuations for neighborhoods and levee districts along the river, and its emergency office later estimated about **200,000 residents were impacted**. Summer heat is the other everyday danger.
