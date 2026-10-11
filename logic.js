@@ -67,6 +67,20 @@
     return Math.round((minor - stage) * 10) / 10;
   }
 
+  // What one gauge card can honestly say. cats = NWS flood categories if loaded (metadata or cache);
+  // catsLoaded = whether the gauge metadata was loaded at all; listCat = floodCategory from the NWPS gauge list.
+  // Returns { category, ft, note } where note is 'below' | 'above' | 'no_fs' (loaded, NWS has none) | 'not_loaded' | null.
+  function gaugeFloodStatus(stage, cats, catsLoaded, listCat) {
+    var hasCats = !!(cats && cats.minor && cats.minor.stage != null && cats.minor.stage > -900);
+    if (stage != null && stage < -900) stage = null;
+    if (hasCats) {
+      var ft = feetToFlood(stage, cats);
+      return { category: riverCategory(stage, cats), ft: ft, note: ft == null ? null : ft > 0 ? 'below' : 'above' };
+    }
+    var lc = !catsLoaded && FLOOD_CAT_LEVEL.hasOwnProperty(listCat) ? listCat : 'unknown';
+    return { category: lc, ft: null, note: stage == null ? null : catsLoaded ? 'no_fs' : 'not_loaded' };
+  }
+
   // Highest forecast stage in the next `hours` (default 7 days) from a series [{t, v}].
   function forecastPeak(fc, nowMs, hours) {
     var end = nowMs + (hours || 168) * 3600e3, best = null;
@@ -306,7 +320,7 @@
     return { ok: true, ageH: Math.round(ageH * 10) / 10 };
   }
 
-  var api = {snapshotUsable: snapshotUsable, replayAt: replayAt, replayLeadTimes: replayLeadTimes, heatIndexF: heatIndexF, heatLevel: heatLevel, heatRiskLevel: heatRiskLevel, feetToFlood: feetToFlood,
+  var api = {snapshotUsable: snapshotUsable, replayAt: replayAt, replayLeadTimes: replayLeadTimes, heatIndexF: heatIndexF, heatLevel: heatLevel, heatRiskLevel: heatRiskLevel, feetToFlood: feetToFlood, gaugeFloodStatus: gaugeFloodStatus,
     forecastPeak: forecastPeak, riskGauges: riskGauges, kmToMi: kmToMi, ageHours: ageHours, valueAt: valueAt,
     hourlyHeatIndex: hourlyHeatIndex, CAT_ORDER: CAT_ORDER, riverCategory: riverCategory, riverLevel: riverLevel,
     alertLevel: alertLevel, alertHazard: alertHazard, overallRisk: overallRisk,
