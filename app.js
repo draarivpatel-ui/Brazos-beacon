@@ -552,6 +552,15 @@
       '<p class="ps-small ps-url">' + esc(t('ps_live')) + ': ' + esc(url) + '</p>' +
       '<footer class="ps-foot">' + esc(t('ps_foot')) + '</footer>';
   }
+  // Long answers can push the go-bag list and the disclaimer onto a 2nd page. Lay the sheet out off-screen at the
+  // printable size of a Letter page (8.5 x 11 in minus the 9 mm @page margins; CSS px are 1/96 in on paper too) and
+  // step down to a tighter type size until it fits on one page.
+  function fitPlanSheet() {
+    var s = $('planSheet'), maxH = (11 - 2 * 9 / 25.4) * 96 - 8, steps = ['ps-c1', 'ps-c2'];
+    s.classList.remove('ps-c1', 'ps-c2'); s.classList.add('ps-measure');
+    for (var i = 0; i < steps.length && s.scrollHeight > maxH; i++) s.classList.add(steps[i]);
+    s.classList.remove('ps-measure');
+  }
   // The QR library is only needed for the printed plan, so it loads when the plan dialog opens, not on first paint.
   var qrLoading = null;
   function loadQR() {
@@ -579,7 +588,7 @@
       var answers = planSave();
       if (dlg.open && dlg.close) dlg.close();
       loadQR().then(function () {
-        buildPlanSheet(answers);
+        buildPlanSheet(answers); fitPlanSheet();
         document.body.classList.add('print-plan');
         setTimeout(function () { window.print(); }, 50);
       });
