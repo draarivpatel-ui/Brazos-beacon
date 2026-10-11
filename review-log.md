@@ -58,3 +58,17 @@ Checks (headless Chromium via bb_qa/cycle8.py, live agency APIs through the prox
 | Tests | `node logic.test.js`: 30/30 (no logic changes; TEST_COUNT stays 30). Plan print path re-checked: QR code present on the sheet after lazy load, EN 1280 and ES 390, no page errors, no horizontal overflow. |
 
 Scripts: /workspace/work/bb_a11y/ (axe.py, kbd.py, cls.py, hero.py, final.py; Lighthouse JSON lh_mobile.json, lh_desktop.json).
+
+## Cycle 10 · Sun Oct 11, 2026, ~9:45-10:45 AM ET (final polish: strict judge re-audit, top 3 fixes)
+
+Audit of the live site before changes (headless Chromium 154, 390 px and 1280 px, EN and ES, live Sugar Land + Harvey replay): axe-core 0 violations in all 8 runs, 0 console errors, no horizontal overflow. Lighthouse mobile on the live URL: Perf **75** (FCP 2.0 s, simulated LCP 6.4 s), A11y/BP/SEO 100. The earlier "Perf 99" was a local-build number.
+
+| # | Issue (judge lens) | Fix |
+|---|---|---|
+| 1 | **Technical craft / performance:** Leaflet's stylesheet was a render-blocking request to a second origin (unpkg), the main item in Lighthouse's render-blocking and dependency-tree audits. | `vendor/leaflet.css` self-hosted, byte-identical to unpkg leaflet@1.9.4 (same SHA-256 as the old SRI hash) plus a licence header; service worker caches it (cache v5). The loading line in the level card now names what is being checked (rivers, alerts, rain, heat, flood zone). It is still the page's largest paint: observed LCP equals FCP. Live Lighthouse mobile after: **Perf 100 and 89** on two runs (FCP 0.8-0.9 s), A11y/BP/SEO 100. Scores vary run to run in this shared sandbox. |
+| 2 | **UX / impact (replay on phones):** at 390 px the hydrograph dropped the **Major flooding 50 ft** label, the very threshold the lead-time box quotes ("Danger when the river passed major flood stage"). The code comment promised a right-side fallback that was never written. | Chart labels now try above-left, above-right, below-left, below-right, checking vertical spacing and horizontal room; on phones the flood-stage label sits under its line so Major 50 ft fits above. Checked EN and ES at 390 and 1280. |
+| 3 | **UX / Spanish completeness:** in Spanish the replay hero still said "RICHMOND · BRAZOS FLOODPLAIN" and the alert chip said "Alerta de inundación: Flood Warning". | Demo place label translated ("Richmond · llanura de inundación del Brazos"), and it now re-renders on language switch. NWS event names mapped to NWS Spanish product names (Aviso = Warning, Vigilancia = Watch, Advertencia = Advisory; flood, flash flood, heat, tropical, surge, severe storm, tornado), used in the hero chip and as the alert-card title with the English name in brackets. The alert text itself stays as NWS issued it, and the note now says so. |
+
+Checks after: `node logic.test.js` 30/30 (no logic changes; TEST_COUNT stays 30). Headless Chromium, local and live: axe 0 violations, 0 console errors, no overflow in all 8 views; offline reload at 390 px still serves the shell from the service worker with Leaflet styles applied. Live files byte-identical to local.
+
+Found, not fixed: NOAA NWPS returned **429 "Rate limit exceeded. Limit: 10 requests / 5 minutes"** to this sandbox's direct IP after many test runs (no CORS header on the 429, so the browser logs it as a CORS error). Requests through the proxy were fine and it isn't documented publicly. Each check makes 11 NWPS calls (1 list + 5 gauges × metadata + stageflow). The app already degrades honestly ("Could not check everything"). Logged as a backlog item.
