@@ -123,4 +123,20 @@ t('offline snapshot only stands in for the same spot while recent', () => {
   assert.strictEqual(L.snapshotUsable(null, 29.6, -95.6, now).reason, 'none');
   assert.strictEqual(L.snapshotUsable({ lat: 29.6 }, 29.6, -95.6, now).reason, 'none');
 });
+t('replay lead time: observed-only never uses look-ahead; outlook is earlier', () => {
+  const s = [[0, 10], [36e5, 30], [2 * 36e5, 46], [3 * 36e5, 51], [4 * 36e5, 55.19], [5 * 36e5, 50]];
+  const r = L.replayLeadTimes(s, cats);
+  assert.strictEqual(r.crestMs, 4 * 36e5); assert.strictEqual(r.crestFt, 55.19);
+  assert.strictEqual(r.observed[4].at, 3 * 36e5); assert.strictEqual(r.observed[4].hours, 1);
+  assert.strictEqual(r.outlook[4].hours, 4, 'outlook sees the major stage 48 h ahead');
+  assert.strictEqual(r.observed[2].hours, 2);
+  const flat = L.replayLeadTimes([[0, 5], [36e5, 6]], cats);
+  assert.strictEqual(flat.observed[1], null); assert.strictEqual(flat.outlook[4], null);
+  const harvey = require('fs').readFileSync(__dirname + '/demo.js', 'utf8');
+  const D = {}; new Function('window', harvey)(D);
+  const h = L.replayLeadTimes(D.BEACON_DEMO.gauge.series, D.BEACON_DEMO.gauge.categories);
+  assert.strictEqual(h.crestFt, 55.19); assert(h.observed[4].hours > 0 && h.outlook[4].hours >= h.observed[4].hours);
+});
+const appCount = +(/var TEST_COUNT = (\d+);/.exec(require('fs').readFileSync(__dirname + '/app.js', 'utf8')) || [])[1];
+assert.strictEqual(appCount, n, 'app.js TEST_COUNT (shown in the "How it works" panel) must match the number of tests');
 console.log(`\n${n} tests passed`);
