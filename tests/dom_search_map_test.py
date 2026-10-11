@@ -125,6 +125,13 @@ def main():
         check('a slow "Use my location" answer does not overwrite a newer Katy pick', pg.evaluate("document.getElementById('placeName').textContent") == 'Katy' and not err,
               pg.evaluate("document.getElementById('placeName').textContent"))
         ctx.close()
+        # 12. JavaScript off: an EN + ES pointer to official alerts instead of an endless "Loading"
+        ctx = b.new_context(viewport={'width': 390, 'height': 844}, java_script_enabled=False); pg = ctx.new_page()
+        pg.goto(base + '/index.html')
+        txt = pg.inner_text('body')
+        check('JavaScript off: EN + ES notice with weather.gov/hgx and FBCAlert is shown',
+              'needs JavaScript' in txt and 'necesita JavaScript' in txt and pg.locator('noscript a[href="https://www.weather.gov/hgx/"], .noscript a[href="https://www.weather.gov/hgx/"]').count() >= 2, txt[:300])
+        ctx.close()
         # 9. race: a slow search answering after a newer city-chip pick must not overwrite it
         held = []
         ctx, pg, err = open_page(b, base, 'en', hold_geocode=held)
