@@ -652,6 +652,7 @@
     $('howTest').textContent = fmt(t('how_test'), { n: TEST_COUNT });
     if (!state.data) $('lvlDesc').textContent = t('loading_desc');
     $('lead').innerHTML = '';
+    if (!state.demo) $('replay').removeAttribute('aria-valuetext');  // the replay readout must not outlive the replay (it was leaking Spanish into the English UI)
     if (state.data) { if (state.demo) recomputeDemo(); else { render(); if (state.selected) selectGauge(state.selected); } }
   }
 
