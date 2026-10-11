@@ -117,7 +117,7 @@
       }).sort(function (a, b) { return a.km - b.km; }).slice(0, 4);
       return Promise.all(list.map(function (g) {
         // Rate-limit friendly (NWPS allows ~10 calls / 5 min): metadata only for gauges within 9 mi.
-        var full = g.km <= 14.5 ? getJSON(API.nwpsGauge(g.lid)).then(null, function () { return g; }) : Promise.resolve(g);
+        var full = g.km <= 14.5 ? getJSON(API.nwpsGauge(g.lid)).then(null, function () { g.metaFailed = true; return g; }) : Promise.resolve(g);
         var flow = getJSON(API.nwpsFlow(g.lid), 20000).then(function (s) {
           return { obs: seriesPts(s.observed).filter(function (p) { return p.t >= now - 7 * 864e5; }), fc: seriesPts(s.forecast) };
         }, function () { return null; });
@@ -129,6 +129,8 @@
         var hasCats = !!(cats && cats.minor && cats.minor.stage > -900);
         var obs = g.status && g.status.observed, fc = g.status && g.status.forecast;
         var stage = obs && obs.primary > -900 ? obs.primary : null;
+        // Metadata call failed (e.g. NWPS 429): fall back to the flood category the gauge list already reports.
+        var listCat = g.metaFailed && obs && ['no_flooding', 'action', 'minor', 'moderate', 'major'].indexOf(obs.floodCategory) >= 0 ? obs.floodCategory : null;
         // Forecast: use the CREST of the official forecast series, not just its next point.
         var peak = g.series ? L_.forecastPeak(g.series.fc, now) : null;
         var fstage = peak ? peak.v : (fc && fc.primary > -900 ? fc.primary : null);
@@ -137,7 +139,7 @@
           lid: g.lid, name: g.name, lat: g.latitude, lon: g.longitude, km: g.km, unit: (obs && obs.primaryUnit) || 'ft',
           stage: stage, fstage: fstage, fTime: peak ? peak.t : null, obsTime: obs && obs.validTime ? Date.parse(obs.validTime) : null,
           cats: hasCats ? cats : null,
-          category: hasCats ? L_.riverCategory(stage, cats) : 'unknown',
+          category: hasCats ? L_.riverCategory(stage, cats) : listCat || 'unknown', metaFailed: !!g.metaFailed,
           forecastCategory: hasCats && fstage != null ? L_.riverCategory(fstage, cats) : null
         };
       });
@@ -248,7 +250,7 @@
       } else {
         var missing = [];
         if (d.offlineAt) { render(); if (state.selected) selectGauge(state.selected); msg(fmt(t('offline_snap_msg'), { time: fmtTime(d.offlineAt) }), true); return; }
-        if (!d.alerts) missing.push('alerts'); if (!d.gauges) missing.push('rivers'); if (!d.wx) missing.push('weather');
+        if (!d.alerts) missing.push('alerts'); if (!d.gauges || d.gauges.some(function (g) { return g.metaFailed && g.km <= RISK_KM; })) missing.push('rivers'); if (!d.wx) missing.push('weather');
         d.risk = L_.overallRisk({ alerts: d.alerts || [], gauges: L_.riskGauges(d.gauges || [], d.zone.info, RISK_KM),
           maxHeatIndex: d.wx ? d.wx.maxHI : null, rain24: d.wx ? d.wx.rain24 : null, missing: missing });
         var keep = d.gauges && d.gauges.some(function (g) { return g.lid === state.selected; });
