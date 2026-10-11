@@ -28,7 +28,7 @@
 | 6 | 1:24–1:40 | Click **Make a printable family flood plan**. Type a meeting place, e.g. `Neighborhood library`. Click **Print / save as PDF**, show the preview | "This makes a one-page family flood plan for the fridge: our flood zone, the river gauge to watch, what to do at each level, and a QR code back to the live page. What I type stays in my browser." | UX |
 | 7 | 1:40–1:54 | DevTools device mode, 390 px. Network → Offline. Reload. Point at the white "Offline" note with the time | "Storms knock out the signal. It installs like an app, and with no connection it shows my last check for this same spot, labeled with when it was taken. It never pretends that's live." | Feasibility, UX |
 | 8 | 1:54–2:22 | Tab 5. Drag the slider all the way left (Aug 24, 2017), press **Play the flood**. It runs about 22 seconds to Sep 8. Let it play | "Replay Harvey loads the real USGS gauge record from 2017. August 24th: All clear. The app's 48-hour outlook here is what the river actually did, and it's labeled that way. By the evening of the 26th it hits Danger, with an example warning, while the river is still under twenty feet. Even with no look-ahead at all, it reaches Danger seventy-five hours before the crest. In real life, the Weather Service forecast a record crest on the 27th, and the county ordered evacuations that night." | Impact |
-| 9 | 2:22–2:34 | Tab 7: run `node logic.test.js` (ends "30 tests passed"), then tab 6, the repo | "It's a static site on GitHub Pages: no server, no API keys, nothing to pay for. The risk rules are pure functions with thirty unit tests, and every source fails safely." | Feasibility, Craft |
+| 9 | 2:22–2:34 | Tab 7: run `node logic.test.js` (ends "33 tests passed"), then tab 6, the repo | "It's a static site on GitHub Pages: no server, no API keys, nothing to pay for. The risk rules are pure functions with thirty-three unit tests, and every source fails safely." | Feasibility, Craft |
 | 10 | 2:34–2:40 | Back to tab 4, the live page | "Next: push alerts and more languages. Brazos Beacon: know your risk, know what to do." | — |
 
 **If you run long:** show only one tab in shot 2 (−6 s); skip typing in shot 6 (−4 s); stop the replay at Sep 1 instead of letting it reach Sep 8 (the narration already fits). Keep the total over 2:00.
@@ -39,7 +39,7 @@
 - Crest 55.19 ft at about 12:15 AM CDT Sep 1, 2017, USGS 08114000 (Brazos River at Richmond); shown in the app's replay banner and in demo.js.
 - Replay levels (from logic.js on the bundled record, confirmed on the live site): level 0 from Aug 24, level 1 from Aug 25 ~6 AM, level 2 Aug 26 ~9 AM, level 4 Danger Aug 26 ~9 PM (stage 18.5 ft), back down to 3 on Sep 4 and to 1 by Sep 5.
 - NWS forecast of a record 59 ft crest and the county's evacuation order, posted Aug 27, 2017, 8:00 PM: https://www.fortbendcountytx.gov/your-county/news/evacuation-orderorden-de-evacuacion
-- 30 unit tests: `node logic.test.js` → "30 tests passed" (run Oct 10, 2026, cycle 8).
+- 33 unit tests: `node logic.test.js` → "33 tests passed" (run Oct 10, 2026, cycle 8).
 - Lead time (shown in the app's replay lead-time box, computed by `logic.replayLeadTimes` through the app's own level pipeline): with **no look-ahead**, Danger at Aug 28, 2017, 9:00 PM CDT (stage 50.2 ft), **75 hours (3.1 days) before the crest**. With the 48-hour hindsight outlook, Danger at Aug 26, 9:00 PM CDT, 123 hours (5.1 days) before. Say the 75-hour number; if you mention 123, say it is hindsight.
 
 ## Screenshot list (Devpost gallery)
@@ -56,6 +56,6 @@ Devpost recommends a 3:2 ratio for gallery images, so set the window to **1440 �
 | 5 | Spanish on a phone | DevTools device mode 390 px → https://aariv.me/Brazos-beacon/?lang=es → top of page ("Mantente atento" or whatever level shows) | Bilingual, mobile (UX, Impact) |
 | 6 | Offline mode on a phone | After #5, Network → Offline → reload → the white "Sin conexión" / "Offline" note with the time and age | Works when the signal drops (Feasibility, UX) |
 | 7 | Family flood plan | Live page → **Make a printable family flood plan** → fill a field or two → screenshot the dialog, then the print preview (or the saved PDF) | Practical takeaway (UX) |
-| 8 | (Optional) Tests | Terminal: `node logic.test.js` showing "30 tests passed" | Code quality (Craft) |
+| 8 | (Optional) Tests | Terminal: `node logic.test.js` showing "33 tests passed" | Code quality (Craft) |
 
 Upload #1 first so it leads the gallery.
