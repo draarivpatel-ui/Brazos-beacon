@@ -208,6 +208,16 @@ t('i18n: every English string has a Spanish one (same keys, list lengths and {pl
     assert(typeof en[k] === 'string' && typeof es[k] === 'string' && es[k] !== en[k], 'far-gauge / rate-limit string not translated: ' + k);
   });
 });
+t('NWS events Houston sees get sensible levels and hazards (table)', () => {
+  [['Red Flag Warning', 3, 'other'], ['Dense Fog Advisory', 1, 'other'], ['Air Quality Alert', 1, 'other'],
+   ['Rip Current Statement', 1, 'other'], ['Coastal Flood Warning', 3, 'flood'], ['Storm Surge Warning', 3, 'tropical'],
+   ['High Wind Warning', 3, 'storm'], ['Special Weather Statement', 1, 'other']].forEach(([ev, lvl, hz]) => {
+    assert.strictEqual(L.alertLevel({ event: ev }), lvl, ev + ' level');
+    assert.strictEqual(L.alertHazard({ event: ev }), hz, ev + ' hazard');
+  });
+  const r = L.overallRisk({ alerts: [{ event: 'Dense Fog Advisory' }] });
+  assert.strictEqual(r.drivers[0].label, 'Dense Fog Advisory', 'drivers keep the NWS event name as label');
+});
 const appCount = +(/var TEST_COUNT = (\d+);/.exec(require('fs').readFileSync(__dirname + '/app.js', 'utf8')) || [])[1];
 assert.strictEqual(appCount, n, 'app.js TEST_COUNT (shown in the "How it works" panel) must match the number of tests');
 console.log(`\n${n} tests passed`);
