@@ -31,6 +31,7 @@
   var REFRESH_MS = 15 * 60e3, STALE_H = 6, RISK_KM = 15;
   // Number of unit tests in logic.test.js (that test file fails if this goes out of date).
   var TEST_COUNT = 36;
+  var WAIT_NOTE_MS = window.__BEACON_WAIT_MS || 5000;   // when the 'still waiting on …' line appears (tests shorten it)
   var DEMO_CREST = DEMO.nowMs;
   // Replay point: inside FEMA Zone AE next to the Brazos in Richmond (checked against the NFHL), so the replay shows the full escalation.
   var DEMO_LOC = { lat: 29.5862, lon: -95.7655, label: 'Richmond · Brazos floodplain' };
@@ -241,7 +242,19 @@
           return (r.features || []).map(function (f) { return f.properties; }).filter(function (p) { return p.status !== 'Test' && p.messageType !== 'Cancel'; });
         })), settled(loadWeather(lat, lon, now)), nearP];
 
+    // After a few seconds with no answer, say which agencies are still being waited on (and shrink the list as
+    // each answers), so a slow NOAA or NWS during a storm reads as "waiting", not as a stuck page.
+    var pendingKeys = state.demo ? [] : ['zone', 'rivers', 'alerts', 'weather'];
+    pendingKeys.forEach(function (k, i) { jobs[i].then(function () { var j = pendingKeys.indexOf(k); if (j >= 0) pendingKeys.splice(j, 1); }); });
+    var waitTimer = state.demo ? null : setInterval(function () {
+      if (id !== state.runId || !pendingKeys.length) { clearInterval(waitTimer); return; }
+      if (state.data) return;   // a refresh keeps showing the last answer instead
+      var names = t('src_names');
+      $('lvlDesc').textContent = fmt(t('still_waiting'), { list: pendingKeys.map(function (k) { return names[k] || k; }).join(', ') });
+    }, WAIT_NOTE_MS);
+
     return Promise.all(jobs).then(function (res) {
+      clearInterval(waitTimer);
       if (id !== state.runId) return;
       $('main').removeAttribute('aria-busy');
       var d = {
