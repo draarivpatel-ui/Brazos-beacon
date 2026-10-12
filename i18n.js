@@ -1,7 +1,7 @@
 /* Brazos Beacon - English / Español strings */
 window.I18N = {
   en: {
-    loading_desc: 'Asking NOAA, NWS and FEMA about the rivers, alerts, rain, heat and flood zone at this spot. This usually takes a few seconds.',
+    loading_desc: 'Asking NOAA, NWS and FEMA about this spot. This takes a few seconds.',
     skip: 'Skip to results', lang_group: 'Language', search_region: 'Choose a location', replay_region: 'Harvey replay controls',
     src_nwps: 'river gauges, flood stages, forecasts', src_nws: 'alerts, heat index, rain', src_nfhl: 'flood zones', src_usgs: 'Harvey replay', src_geo: 'address search, map',
     level_word: 'Beacon level', ft: 'ft', inch: 'in', fcst_short: 'forecast',
@@ -164,7 +164,7 @@ window.I18N = {
     disclaimer: 'Brazos Beacon is a student project that summarizes public data. It is not an official warning system. Always follow the National Weather Service and Fort Bend County officials.'
   },
   es: {
-    loading_desc: 'Consultando a NOAA, el NWS y FEMA sobre los ríos, las alertas, la lluvia, el calor y la zona de inundación de este lugar. Suele tardar unos segundos.',
+    loading_desc: 'Consultando a NOAA, el NWS y FEMA sobre este lugar. Tarda unos segundos.',
     skip: 'Ir a los resultados', lang_group: 'Idioma', search_region: 'Elige un lugar', replay_region: 'Controles de la repetición de Harvey',
     src_nwps: 'medidores de río, niveles de inundación, pronósticos', src_nws: 'alertas, índice de calor, lluvia', src_nfhl: 'zonas de inundación', src_usgs: 'repetición de Harvey', src_geo: 'búsqueda de direcciones, mapa',
     level_word: 'Nivel Beacon', ft: 'pies', inch: 'pulg.', fcst_short: 'pronóstico',

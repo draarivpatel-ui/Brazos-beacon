@@ -54,6 +54,9 @@ main { padding: 8px clamp(16px, 4vw, 40px) 24px; }
 @media (prefers-reduced-motion: reduce) { .hero.lvl-4 .dial { animation: none; } }
 .hero h2 { margin: 0; font-size: clamp(24px, 3.4vw, 34px); }
 .hero p { margin: 4px 0; }
+/* Reserve two lines for the level sentence so the hero (and everything under it) doesn't jump when the
+   'Checking live sources' text is replaced by the answer (CLS was 0.11 at 1280 px). */
+#lvlDesc { min-height: 3em; }
 .hero.lvl-2 .drivers li { background: rgba(0,0,0,.1); }
 .hero.lvl-2 .ghost { border-color: rgba(0,0,0,.45); background: rgba(255,255,255,.3); }
 .hero.lvl-2 .dial { border-color: rgba(0,0,0,.45); background: rgba(255,255,255,.35); }
