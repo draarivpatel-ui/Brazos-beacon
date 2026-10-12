@@ -207,6 +207,7 @@ body.print-plan .plan-sheet.ps-c2, .plan-sheet.ps-measure.ps-c2 { font-size: 8pt
 /* Harvey replay lead time */
 .lead { margin-top: 10px; background: #fff; border: 1px solid #c99a06; border-left: 6px solid #b3122e; border-radius: 8px; padding: 10px 14px; color: #2b2100; font-weight: 400; }
 .lead:empty { display: none; }
+#lead:not(:empty) + #leadBoot { display: none; }  /* first-paint placeholder (index.html) gives way to the real box */
 .lead .lead-head { font-size: 17px; font-weight: 800; margin: 0 0 4px; color: #7a0c1f; }
 .lead .lead-head b { font-size: 22px; }
 .lead p { margin: 0 0 4px; font-size: 14px; line-height: 1.45; }

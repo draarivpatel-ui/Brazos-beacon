@@ -51,6 +51,7 @@
       <output id="replayTime" for="replay" aria-live="off"></output>
     </div>
     <div id="lead" class="lead" role="note"></div>
+    <div id="leadBoot" class="lead" aria-hidden="true" inert hidden></div>
   </section>
   <script>
   // Harvey replay link (?demo=harvey): show the replay banner at first paint instead of when app.js runs, so the
@@ -66,6 +67,15 @@
     document.getElementById('playBtn').textContent = T[1];
     document.getElementById('crestBtn').textContent = T[2];
     document.getElementById('demoBanner').hidden = false;
+    // The lead-time box needs the FEMA answer, so app.js fills #lead a second or two later and the page jumped
+    // ~430 px at 390 px (CLS 0.33). For the default replay spot (Zone AE) its text is fixed, so a same-size copy
+    // holds the space; CSS hides it once #lead is filled and app.js removes it. tests/dom_cls_test.py checks the
+    // copy still matches what app.js writes.
+    if (p.get('lat') || p.get('lon')) return;
+    var lb = document.getElementById('leadBoot');
+    lb.innerHTML = es ? '<p class="lead-head">Tiempo de aviso: el nivel Peligro llegó 75 horas (3.1 días) antes de la cresta.</p><p>Prueba con datos pasados usando solo las lecturas hasta cada momento (sin ver el futuro): el nivel llegó a Peligro el 28 ago 2017, 9:00 p.m. CDT, cuando el río pasó el nivel de inundación mayor (50 pies). La cresta fue de 55.19 pies el 1 sept 2017, 12:15 a.m. CDT.</p><p class="lead-out">Con el pronóstico de 48 horas serían 123 horas (5.1 días). Cuidado con ese número: ese pronóstico es retrospectivo. Usa lo que el río hizo en realidad después, en lugar de los pronósticos del NWS de 2017, que la app no tiene archivados.</p><p class="lead-note">Hay una lectura cada 3 horas, así que las horas tienen un margen de 3 horas.</p><button type="button" tabindex="-1">Ir a ese momento</button>'
+                      : '<p class="lead-head">Lead time: Danger came 75 hours (3.1 days) before the crest.</p><p>Backtest using only readings up to each moment (no look-ahead): the level reached Danger at Aug 28, 2017, 9:00 PM CDT, when the river passed major flood stage (50 ft). The crest was 55.19 ft at Sep 1, 2017, 12:15 AM CDT.</p><p class="lead-out">With the 48-hour outlook it would be 123 hours (5.1 days). Be careful with that number: the outlook is hindsight. It uses what the river really did next, standing in for the 2017 NWS forecasts, which the app does not have archived.</p><p class="lead-note">Readings are every 3 hours, so times are within 3 hours.</p><button type="button" tabindex="-1">Jump to that moment</button>';
+    lb.lang = es ? 'es' : 'en'; lb.hidden = false;
   })();
   </script>
 

@@ -187,6 +187,7 @@
   }
   function renderLead() {
     var box = $('lead'); if (!box) return;
+    var lb = $('leadBoot'); if (lb) lb.remove();  // the first-paint placeholder has done its job
     var d = state.data;
     if (!state.demo || !d) { box.innerHTML = ''; return; }
     var g = DEMO.gauge, r = L_.replayLeadTimes(g.series, g.categories, demoLevelFn(d.zone && d.zone.info));
@@ -701,6 +702,7 @@
     $('map').setAttribute('aria-label', t('map_label')); setMapAttr(); setZoomControl();
     $('howTest').textContent = fmt(t('how_test'), { n: TEST_COUNT });
     if (!state.data) $('lvlDesc').textContent = t('loading_desc');
+    var lb = $('leadBoot'); if (lb && (!state.demo || lb.lang !== state.lang || !lb.innerHTML)) lb.remove();
     $('lead').innerHTML = '';
     if (!state.demo) $('replay').removeAttribute('aria-valuetext');  // the replay readout must not outlive the replay (it was leaking Spanish into the English UI)
     if (state.data) { if (state.demo) recomputeDemo(); else { render(); if (state.selected) selectGauge(state.selected); } }

@@ -14,11 +14,14 @@ import dom_429_test as base_t
 from dom_429_test import fixtures, classify, serve, launch
 from playwright.sync_api import sync_playwright
 
-INIT = ("window.__cls=0;new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.__cls+=e.value})"
+# __boot: the placeholder text as parsed, read when parsing ends and before the deferred scripts run.
+INIT = ("document.addEventListener('readystatechange',()=>{if(document.readyState==='interactive'){const e=document.getElementById('leadBoot');window.__boot=e?e.textContent:''}});"
+        "window.__cls=0;new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.__cls+=e.value})"
         ".observe({type:'layout-shift',buffered:true});")
 
-def run(browser, baseurl, w, h, lang, extra=''):
+def run(browser, baseurl, w, h, lang, extra='', zone=None):
     fx = fixtures()
+    if zone: fx['fema'] = {'features': [{'attributes': zone, 'geometry': None}]}
     ctx = browser.new_context(viewport={'width': w, 'height': h}, service_workers='block')
     page = ctx.new_page(); errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
@@ -40,7 +43,9 @@ def run(browser, baseurl, w, h, lang, extra=''):
     page.goto(baseurl + '/index.html?lang=' + lang + extra, wait_until='domcontentloaded')
     page.wait_for_function("document.getElementById('main') && !document.getElementById('main').hasAttribute('aria-busy') && /^[0-4?]$/.test(document.getElementById('lvlNum').textContent.trim())", timeout=30000)
     page.wait_for_timeout(1500)
-    o = page.evaluate("({cls: window.__cls, num: document.getElementById('lvlNum').textContent.trim()})")
+    if extra: page.wait_for_function("!document.getElementById('leadBoot')", timeout=15000)
+    o = page.evaluate("({cls: window.__cls, num: document.getElementById('lvlNum').textContent.trim(), lead: document.getElementById('lead').textContent, booted: !!document.getElementById('leadBoot')})")
+    o['boot'] = page.evaluate("window.__boot || ''")
     o['errors'] = errors
     ctx.close()
     return o
@@ -61,12 +66,22 @@ def main():
                     if not cond: fails.append(name)
             # The Harvey replay link (README, Devpost): before Oct 11 night the replay banner only appeared when
             # app.js ran, pushing the whole page down (CLS 0.35 at 390 px, 0.12 at 1280 px).
+            # The lead-time box needs the FEMA answer; the replay spot is in Zone AE (real NFHL answer), so stub that.
+            AE = {'FLD_ZONE': 'AE', 'ZONE_SUBTY': None, 'SFHA_TF': 'T'}
             for lang in ('en', 'es'):
-                o = run(b, baseurl, w, h, lang, '&demo=harvey')
-                name = '%dpx %s ?demo=harvey: replay banner shown at first paint, layout shift under 0.1 (CLS %.3f)' % (w, lang, o['cls'])
-                cond = o['cls'] < 0.1 and not o['errors']
-                n += 1; print(('ok - ' if cond else 'FAIL - ') + name + ('' if cond else '  ' + json.dumps(o)[:400]))
-                if not cond: fails.append(name)
+                o = run(b, baseurl, w, h, lang, '&demo=harvey', zone=AE)
+                for name, cond in (
+                        ('%dpx %s ?demo=harvey: replay banner + lead-time box held at first paint, layout shift under 0.1 (CLS %.3f)' % (w, lang, o['cls']), o['cls'] < 0.1 and not o['errors']),
+                        ('%dpx %s ?demo=harvey: the first-paint lead-time copy says exactly what app.js writes, then is removed' % (w, lang),
+                         len(o['boot']) > 100 and o['boot'].strip() == o['lead'].strip() and not o['booted'])):
+                    n += 1; print(('ok - ' if cond else 'FAIL - ') + name + ('' if cond else '  ' + json.dumps(o, ensure_ascii=False)[:700]))
+                    if not cond: fails.append(name)
+            # If FEMA ever answers a zone where the lead box stays empty, the placeholder must not linger.
+            o = run(b, baseurl, w, h, 'en', '&demo=harvey')
+            name = '%dpx ?demo=harvey with a Zone X answer: no stale lead-time copy left on the page' % w
+            cond = not o['booted'] and not o['lead'].strip()
+            n += 1; print(('ok - ' if cond else 'FAIL - ') + name + ('' if cond else '  ' + json.dumps(o)[:400]))
+            if not cond: fails.append(name)
         b.close()
     srv.shutdown()
     # The inline first-paint script in index.html copies three strings from i18n.js; they must not drift apart.
