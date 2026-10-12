@@ -23,3 +23,4 @@ jobs:
       - run: python tests/plan_print_test.py
       - run: python tests/dom_cls_test.py
       - run: python tests/dom_wait_test.py
+      - run: python tests/dom_live_test.py

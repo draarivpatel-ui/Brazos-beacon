@@ -232,7 +232,7 @@
     setMap(lat, lon);
     $('placeName').textContent = placeText(state.label);
     if (!state.data) $('lvlDesc').textContent = t('loading_desc');
-    if (!state.data) ['zone', 'wx', 'rivers', 'alerts'].forEach(function (k) { $(k).innerHTML = '<p class="skel">' + esc(t('loading')) + '</p>'; });
+    if (!state.data) ['zone', 'wx', 'rivers', 'alerts'].forEach(function (k) { $(k)._html = null; $(k).innerHTML = '<p class="skel">' + esc(t('loading')) + '</p>'; });
 
     var now = state.demo ? state.demoNow : Date.now();
     var zoneP = settled(loadZone(lat, lon)), nearP = settled(loadNearbySFHA(lat, lon));
@@ -294,6 +294,18 @@
   function inArea(lat, lon) { return lat > 28.8 && lat < 30.6 && lon > -96.8 && lon < -94.6; }
 
   // ---------- rendering ----------
+  // Screen readers hear one short line (#heroLive) when the answer changes: the place or the level. The hero itself is
+  // not a live region, so a 15-minute refresh with the same answer, each step of the replay slider and the Share button
+  // no longer re-read the whole card. During the replay the line waits until the slider rests.
+  var said = { level: '', timer: 0 };
+  function announceLevel(text) {
+    clearTimeout(said.timer);
+    said.timer = setTimeout(function () { if (text === said.level) return; said.level = text; $('heroLive').textContent = text; }, state.demo ? 800 : 50);
+  }
+  function announce(text) { $('heroLive').textContent = ''; setTimeout(function () { $('heroLive').textContent = text; }, 50); }
+  // Live regions (alerts) are only rewritten when their content really changed, so an unchanged refresh stays quiet.
+  function setLive(el, html) { if (el._html === html) return; el._html = html; el.innerHTML = html; }
+
   function render() {
     var d = state.data; if (!d) return;
     var risk = d.risk, lv = risk.level, unsure = risk.incomplete && lv === 0;
@@ -306,6 +318,7 @@
       : t('level_desc')[lv] + (risk.incomplete ? ' ' + fmt(t('incomplete_note'), { list: missingTxt }) : '');
     $('lvlLabel').textContent = t('level_word');
     $('placeName').textContent = placeText(state.label);
+    announceLevel(placeText(state.label) + '. ' + t('level_word') + ' ' + (unsure ? '?' : lv) + ': ' + $('lvlName').textContent + '.');
     var on = $('offlineNote'); on.hidden = !d.offlineAt;
     if (d.offlineAt) on.textContent = fmt(t('offline_snap'), { time: fmtTime(d.offlineAt), age: d.offlineAge < 1 ? t('age_lt1') : fmt(t('age_h'), { n: num(d.offlineAge) }) });
     var hz = t('hz'), catNames = t('cat');
@@ -370,15 +383,15 @@
     }
 
     // Alerts
-    if (!d.alerts) { $('alerts').innerHTML = '<p class="empty">' + esc(fmt(t('err_src'), { src: 'NWS' })) + '</p>'; }
-    else if (!d.alerts.length) { $('alerts').innerHTML = '<p class="empty ok">' + esc(t('no_alerts')) + '</p>'; }
+    if (!d.alerts) { setLive($('alerts'), '<p class="empty">' + esc(fmt(t('err_src'), { src: 'NWS' })) + '</p>'); }
+    else if (!d.alerts.length) { setLive($('alerts'), '<p class="empty ok">' + esc(t('no_alerts')) + '</p>'); }
     else {
-      $('alerts').innerHTML = (state.lang === 'es' ? '<p class="fine">' + esc(t('alerts_en')) + '</p>' : '') + d.alerts.map(function (a) {
+      setLive($('alerts'), (state.lang === 'es' ? '<p class="fine">' + esc(t('alerts_en')) + '</p>' : '') + d.alerts.map(function (a) {
         var lvA = L_.alertLevel(a);
         return '<div class="alert a' + lvA + '"><b>' + esc(evName(a.event)) + (evName(a.event) !== a.event ? ' <span lang="en">(' + esc(a.event) + ')</span>' : '') + '</b><small>' + esc(a.headline || a.areaDesc || '') + '</small>' +
           (a.ends || a.expires ? '<small>' + esc(t('until')) + ' ' + esc(fmtTime(Date.parse(a.ends || a.expires))) + '</small>' : '') +
           '<details><summary>' + esc(t('details')) + '</summary><p>' + esc(a.description || '') + '</p>' + (a.instruction ? '<p><b>' + esc(a.instruction) + '</b></p>' : '') + '</details></div>';
-      }).join('');
+      }).join(''));
     }
 
     // Actions
@@ -741,7 +754,7 @@
       b.addEventListener('click', function () { state.lang = b.getAttribute('data-lang'); applyLang(); updateURL(); });
     });
     $('shareBtn').addEventListener('click', function () {
-      var btn = $('shareBtn'), done = function (ok) { btn.textContent = ok ? t('copied') : t('copy_fail'); setTimeout(function () { btn.textContent = t('share'); }, 2000); };
+      var btn = $('shareBtn'), done = function (ok) { btn.textContent = ok ? t('copied') : t('copy_fail'); announce(btn.textContent); setTimeout(function () { btn.textContent = t('share'); }, 2000); };
       if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) { navigator.share({ title: 'Brazos Beacon', url: location.href }).catch(function () {}); return; }
       if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function () { done(true); }, function () { done(false); }); else done(false);
     });
