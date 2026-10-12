@@ -116,11 +116,13 @@
 
   function alertHazard(a) {
     var ev = ((a && a.event) || '').toLowerCase();
+    // Cold first: "Wind Chill Advisory", "Winter Storm Warning" and "Freezing Rain Advisory" contain
+    // "wind", "storm" or "rain" but are cold events, not storm or flood ones.
+    if (/wind chill|freez|frost|winter|cold|\bice\b|\bsnow\b|sleet/.test(ev)) return 'cold';
     if (/flood|hydrologic|rain/.test(ev)) return 'flood';
     if (/heat/.test(ev)) return 'heat';
     if (/hurricane|tropical|storm surge/.test(ev)) return 'tropical';
     if (/tornado|thunderstorm|wind/.test(ev)) return 'storm';
-    if (/freeze|winter|cold|ice/.test(ev)) return 'cold';
     return 'other';
   }
 

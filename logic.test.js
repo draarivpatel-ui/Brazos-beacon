@@ -38,6 +38,19 @@ t('alert levels', () => {
   assert.strictEqual(L.alertLevel({ event: 'Flood Watch', severity: 'Moderate' }), 2);
   assert.strictEqual(L.alertLevel({ event: 'Extreme Heat Warning', severity: 'Extreme' }), 4);
 });
+t('alert hazard labels: cold events are never filed under storm, flood or rain', () => {
+  const h = e => L.alertHazard({ event: e });
+  ['Wind Chill Advisory', 'Wind Chill Warning', 'Extreme Cold Warning', 'Winter Storm Warning', 'Ice Storm Warning',
+    'Freezing Rain Advisory', 'Freezing Fog Advisory', 'Hard Freeze Warning', 'Freeze Watch', 'Frost Advisory']
+    .forEach(e => assert.strictEqual(h(e), 'cold', e));
+  [['Flash Flood Warning', 'flood'], ['Coastal Flood Advisory', 'flood'], ['Flood Watch', 'flood'],
+    ['Excessive Heat Warning', 'heat'], ['Heat Advisory', 'heat'], ['Tropical Storm Warning', 'tropical'],
+    ['Storm Surge Watch', 'tropical'], ['Hurricane Warning', 'tropical'], ['Severe Thunderstorm Warning', 'storm'],
+    ['Tornado Warning', 'storm'], ['High Wind Warning', 'storm'], ['Dense Fog Advisory', 'other'],
+    ['Rip Current Statement', 'other'], ['Special Weather Statement', 'other']]
+    .forEach(([e, k]) => assert.strictEqual(h(e), k, e));
+  assert.strictEqual(L.alertHazard(null), 'other');
+});
 t('overall risk takes the worst driver', () => {
   const r = L.overallRisk({ alerts: [{ event: 'Heat Advisory', severity: 'Moderate' }], gauges: [{ name: 'Brazos', category: 'minor', forecastCategory: 'moderate' }], maxHeatIndex: 95 });
   assert.strictEqual(r.level, 3); assert.strictEqual(r.drivers[0].hazard, 'river'); assert.strictEqual(r.drivers[0].rising, true);

@@ -16,7 +16,7 @@ Built for **WarriorHacks 2.0** (Hackathon track): *"Create a project that solves
 1. Open https://aariv.me/Brazos-beacon/ and enter any Fort Bend County address or ZIP.
 2. Open https://aariv.me/Brazos-beacon/?demo=harvey for the Hurricane Harvey replay.
 3. Toggle English/Español; every string has a Spanish twin.
-4. Run `node logic.test.js` (36 unit tests) and the headless-Chromium suites in `tests/` (listed under Testing; all passing when re-run Oct 11, 2026). GitHub Actions runs the unit tests and every stubbed browser suite on each push.
+4. Run `node logic.test.js` (37 unit tests) and the headless-Chromium suites in `tests/` (listed under Testing; all passing when re-run Oct 11, 2026). GitHub Actions runs the unit tests and every stubbed browser suite on each push.
 
 Honest limits: live data comes from public NOAA/NWS/FEMA services and can lag, rate-limit or fail (the page then says *"Could not check everything"*); the browser suites run in headless Chromium only, not on real phones or Safari.
 
@@ -104,7 +104,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 git clone https://github.com/draarivpatel-ui/Brazos-beacon.git
 cd Brazos-beacon
 python3 -m http.server 8000      # then open http://localhost:8000
-node logic.test.js               # 36 unit tests for the risk logic
+node logic.test.js               # 37 unit tests for the risk logic
 pip install playwright && python3 -m playwright install chromium
 python3 tests/dom_search_map_test.py   # or any other tests/*.py (see Testing)
 ```
@@ -134,7 +134,7 @@ Spanish flood terms follow the agencies' own Spanish: NWS *vigilancia* / *aviso*
 
 ## Testing
 
-- `node logic.test.js`: **36 unit tests, all passing** (re-run Oct 11, 2026) (flood categories incl. missing/-9999 values, feet-to-flood-stage, what each gauge card may say (feet to flood stage, "no flood stage set" only when NWS truly has none, "flood stage not loaded" when it could not be fetched), forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, the replay's lead-time numbers (with and without look-ahead), checklist escalation, the family plan choosing the nearest in-range gauge that has an official flood stage, and the offline fallback only reusing a saved check for the same spot (within 1.5 km) from the last 72 hours). The test file also checks that the test count shown in the app's "How it works" panel matches.
+- `node logic.test.js`: **37 unit tests, all passing** (re-run Oct 11, 2026) (flood categories incl. missing/-9999 values, feet-to-flood-stage, what each gauge card may say (feet to flood stage, "no flood stage set" only when NWS truly has none, "flood stage not loaded" when it could not be fetched), forecast crest, distance and floodplain discounting, heat index and NWS Houston thresholds, misaligned NWS grid intervals, rain prorating, "never a false all-clear", Harvey replay never peeking into the future, the replay's lead-time numbers (with and without look-ahead), checklist escalation, the family plan choosing the nearest in-range gauge that has an official flood stage, and the offline fallback only reusing a saved check for the same spot (within 1.5 km) from the last 72 hours). The test file also checks that the test count shown in the app's "How it works" panel matches.
 - `python3 tests/plan_print_test.py` (22 checks): the printable family flood plan saved as a US Letter PDF in headless Chromium (APIs stubbed), English and Spanish, blank and with every answer at its maximum length: always exactly one page, QR code drawn, title / level / key numbers / go-bag list printed, every answer printed in full, no app screen behind it. It caught (and Oct 11 fixed) the Spanish sheet spilling onto a 2nd page even when blank; the sheet now steps down to a tighter type size only when it would not fit.
 - `python3 tests/live_regression.py` (58 checks; add `--live` to test https://aariv.me/Brazos-beacon/ itself): headless Chromium against the **real** NOAA/NWS/FEMA services (no stubs) at 390 and 1280 px in English and Spanish: the live Sugar Land check shows a real level or the honest "?", lists gauges, and has no page errors, console errors, horizontal overflow or serious/critical axe-core issues; the Harvey replay opens, reads Danger (4) at the 2017 crest, renders the lead-time box, is calmer at the start, and keeps WCAG AA text contrast on every hero colour it passes through. Re-run Oct 11, 2026: 58/58 local and live. It caught (and Oct 11 fixed) the place name on the green All-clear banner at 4.39:1 contrast.
 - `python3 tests/readme_tour.py` (50 checks; `--live` for aariv.me): walks the *Judge it in 60 seconds* steps above at 390 px, starting in English and in Spanish, with real data: a Fort Bend ZIP (77469) moves the hero to Richmond with a level in the right language and gauges listed; `?demo=harvey` opens the replay at Danger (4) with the lead-time box; the EN/ES buttons switch `<html lang>`, `aria-pressed`, the tagline and the level name without leaving the replay; no page or console errors, no overflow, no serious/critical axe issues. Re-run live Oct 11, 2026 (~9:05 PM ET): 50/50.
