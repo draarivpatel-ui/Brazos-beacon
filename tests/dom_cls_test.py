@@ -17,7 +17,7 @@ from playwright.sync_api import sync_playwright
 INIT = ("window.__cls=0;new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.__cls+=e.value})"
         ".observe({type:'layout-shift',buffered:true});")
 
-def run(browser, baseurl, w, h, lang):
+def run(browser, baseurl, w, h, lang, extra=''):
     fx = fixtures()
     ctx = browser.new_context(viewport={'width': w, 'height': h}, service_workers='block')
     page = ctx.new_page(); errors = []
@@ -37,7 +37,7 @@ def run(browser, baseurl, w, h, lang):
     if os.environ.get('CLS_THROTTLE', '1') == '1':
         cdp = ctx.new_cdp_session(page); cdp.send('Emulation.setCPUThrottlingRate', {'rate': 4})
     page.add_init_script(INIT)
-    page.goto(baseurl + '/index.html?lang=' + lang, wait_until='domcontentloaded')
+    page.goto(baseurl + '/index.html?lang=' + lang + extra, wait_until='domcontentloaded')
     page.wait_for_function("document.getElementById('main') && !document.getElementById('main').hasAttribute('aria-busy') && /^[0-4?]$/.test(document.getElementById('lvlNum').textContent.trim())", timeout=30000)
     page.wait_for_timeout(1500)
     o = page.evaluate("({cls: window.__cls, num: document.getElementById('lvlNum').textContent.trim()})")
@@ -59,8 +59,30 @@ def main():
                                    ('%dpx %s: a real level is shown, no page errors' % (w, lang), o['num'] in '01234' and o['num'] and not o['errors'])):
                     n += 1; print(('ok - ' if cond else 'FAIL - ') + name + ('' if cond else '  ' + json.dumps(o)[:400]))
                     if not cond: fails.append(name)
+            # The Harvey replay link (README, Devpost): before Oct 11 night the replay banner only appeared when
+            # app.js ran, pushing the whole page down (CLS 0.35 at 390 px, 0.12 at 1280 px).
+            for lang in ('en', 'es'):
+                o = run(b, baseurl, w, h, lang, '&demo=harvey')
+                name = '%dpx %s ?demo=harvey: replay banner shown at first paint, layout shift under 0.1 (CLS %.3f)' % (w, lang, o['cls'])
+                cond = o['cls'] < 0.1 and not o['errors']
+                n += 1; print(('ok - ' if cond else 'FAIL - ') + name + ('' if cond else '  ' + json.dumps(o)[:400]))
+                if not cond: fails.append(name)
         b.close()
     srv.shutdown()
+    # The inline first-paint script in index.html copies three strings from i18n.js; they must not drift apart.
+    import re, subprocess
+    html = open(os.path.join(base_t.ROOT, 'index.html'), encoding='utf-8').read()
+    js = ("global.window=global;require(%r);const T=window.I18N||I18N;console.log(JSON.stringify(['en','es'].map(l=>[T[l].demo_banner,T[l].play,T[l].crest_btn])))"
+          % os.path.join(base_t.ROOT, 'i18n.js'))
+    try:
+        want = json.loads(subprocess.run(['node', '-e', js], capture_output=True, text=True, check=True).stdout)
+        for lang, strings in zip(('en', 'es'), want):
+            cond = all(("'%s'" % x) in html for x in strings)
+            name = 'index.html first-paint replay strings match i18n.js (%s)' % lang
+            n += 1; print(('ok - ' if cond else 'FAIL - ') + name)
+            if not cond: fails.append(name)
+    except Exception as e:
+        n += 1; fails.append('i18n parity check could not run: %s' % e); print('FAIL - i18n parity check could not run: %s' % e)
     print('\n%d checks, %d failed' % (n, len(fails)))
     sys.exit(1 if fails else 0)
 

@@ -52,6 +52,22 @@
     </div>
     <div id="lead" class="lead" role="note"></div>
   </section>
+  <script>
+  // Harvey replay link (?demo=harvey): show the replay banner at first paint instead of when app.js runs, so the
+  // page doesn't jump down ~330 px at 390 px (CLS 0.35). Same language pick as app.js init(); strings mirror i18n.js
+  // (tests/dom_cls_test.py checks they stay identical). app.js re-applies everything once it loads.
+  (function () {
+    var p = new URLSearchParams(location.search);
+    if (p.get('demo') !== 'harvey') return;
+    var es = p.get('lang') === 'es' || (!p.get('lang') && /^es/i.test(navigator.language || ''));
+    var T = es ? ['SIMULACIÓN, NO SON DATOS ACTUALES: el registro real del USGS del río Brazos en Richmond durante el huracán Harvey (cresta 55.19 pies, cerca de las 12:15 AM del 1 sep 2017). Mueve el control deslizante o presiona Ver.', '▶ Ver la inundación', 'Ir a la cresta']
+               : ['SIMULATION, NOT CURRENT DATA: the real USGS record for the Brazos River at Richmond during Hurricane Harvey (crest 55.19 ft, about 12:15 AM Sep 1, 2017). Drag the slider or press Play.', '▶ Play the flood', 'Jump to crest'];
+    document.getElementById('demoText').textContent = T[0];
+    document.getElementById('playBtn').textContent = T[1];
+    document.getElementById('crestBtn').textContent = T[2];
+    document.getElementById('demoBanner').hidden = false;
+  })();
+  </script>
 
   <section class="search" aria-label="Choose a location" data-i18n-aria="search_region">
     <form id="searchForm" autocomplete="on">
