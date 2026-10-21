@@ -22,11 +22,11 @@ Honest limits: live data comes from public NOAA/NWS/FEMA services and can lag, r
 
 ---
 
-## The problem
+## Why I built this
 
-Fort Bend County sits where the Brazos River, the San Bernard River, and Houston-area bayous meet. During Hurricane Harvey the Brazos at Richmond crested at **55.19 ft** on Sept 1, 2017 (flood stage is 45 ft), the highest since 1915. The county ordered mandatory evacuations for neighborhoods and levee districts along the river, and its emergency office later estimated about **200,000 residents were impacted**. Summer heat is the other everyday danger.
+I live in Fort Bend County, where the Brazos River, the San Bernard River, and Houston-area bayous meet. During Hurricane Harvey the Brazos at Richmond crested at **55.19 ft** on Sept 1, 2017 (flood stage is 45 ft), the highest since 1915. The county ordered mandatory evacuations for neighborhoods and levee districts along the river, and its emergency office later estimated about **200,000 residents were impacted**. In the summer, extreme heat is the other everyday danger here.
 
-The information people need is public, but it is spread across agencies, apps, and formats:
+All of the data families need to stay safe is public, but during a storm it is scattered across different government sites and map viewers:
 
 | Question a resident has | Where the answer lives today |
 |---|---|
@@ -36,12 +36,12 @@ The information people need is public, but it is spread across agencies, apps, a
 | "How hot will it actually feel?" | NWS forecast grids |
 | "What should I do *right now*?" | County preparedness pages |
 
-Brazos Beacon combines all five for one address into **a single 0–4 risk level, a reason for it, and a short checklist**, in English or Spanish. Nobody has to read a hydrograph to use it.
+I built Brazos Beacon so you can type one address and get all five combined into **a single 0-4 risk level, a plain-language reason for it, and a short checklist**, in English or Spanish. Nobody has to read a hydrograph or click through GIS layers when the rain starts.
 
 ## Features
 
 - **Address → answer.** Type an address or ZIP, tap "Use my location", pick a city chip (Sugar Land, Missouri City, Richmond, Rosenberg, Fulshear, Stafford, Needville, Katy), or click the map.
-- **One Beacon level (0–4):** *All clear · Stay aware · Get ready · Take action · Danger*, with the specific drivers listed ("River: Brazos River at Richmond (Major flooding)", "Max heat index (3 days) 109°F").
+- **One Beacon level (0-4):** *All clear · Stay aware · Get ready · Take action · Danger*, with the specific drivers listed ("River: Brazos River at Richmond (Major flooding)", "Max heat index (3 days) 109°F").
 - **Never a false "All clear".** If NWS alerts, NOAA gauges, or the NWS forecast don't answer, the page says *"Could not check everything"* instead of showing green, and names the missing source.
 - **FEMA flood zone at your exact point**, explained in plain words, with your zone's polygon and nearby high-risk areas drawn on the map, plus a link to the official FEMA map for that spot.
 - **Nearest 4 river gauges** (distance in miles): current stage, **how many feet below or above flood stage**, the **crest of the official NWS forecast** (not just its next point), when it was observed, and a warning if the reading is more than 6 hours old. Gauges farther than about 9 miles get the same flood-stage distance and forecast high, but are marked *"too far to change your level"* and never raise it.
@@ -54,7 +54,7 @@ Brazos Beacon combines all five for one address into **a single 0–4 risk level
 - **English and Spanish**, auto-detected from the browser, switchable anytime (NWS alert text itself stays in English, and the app says so).
 - **Printable family flood plan.** One tap builds a one-page, fridge-ready plan for that exact spot (English or Spanish): the FEMA zone and what it means, the Beacon level when printed, the nearest NOAA river gauge with its action / flood / moderate / major stages, a "when to do what" ladder for levels 2-4, a Ready.gov go-bag checklist, Fort Bend key numbers, and a QR code back to the live page. The family fills in who lives there, an out-of-area contact, two meeting places, where they would evacuate, medicines and pets (or leaves blanks to write by hand). Those answers are kept only in the browser's localStorage and are never sent anywhere. Print it or save it as a PDF.
 - **Shareable links** (`?lat=…&lon=…&lang=es`) so a parent can text the exact view to family. Refreshes every 15 minutes while open.
-- **"Replay Harvey" mode with a time slider.** It loads the **real USGS gage record** for the Brazos at Richmond (Aug 24 – Sep 8, 2017) at a point inside the FEMA floodplain. Drag the slider or press **Play the flood** and watch the level climb from *All clear* (Aug 26) to *Danger* as the forecast crest approaches, then fall again. The app only uses readings up to the chosen moment; what the river actually did over the next 48 h stands in for the forecast. The flood warning shown is a clearly labeled re-created example, not an archived NWS product. A **lead-time box** in the replay states the backtest result: using only readings up to each moment (no look-ahead), the level reached *Danger* at 9 PM CDT on Aug 28, 2017, **75 hours (3.1 days) before the 55.19 ft crest**. With the 48-hour outlook it would be 123 hours (5.1 days), and the box says plainly that this second number is hindsight, because the 2017 NWS forecasts are not archived in the app. Readings are every 3 hours, so times are within 3 hours. "Jump to that moment" moves the slider there.
+- **"Replay Harvey" mode with a time slider.** It loads the **real USGS gage record** for the Brazos at Richmond (Aug 24 - Sep 8, 2017) at a point inside the FEMA floodplain. Drag the slider or press **Play the flood** and watch the level climb from *All clear* (Aug 26) to *Danger* as the forecast crest approaches, then fall again. The app only uses readings up to the chosen moment; what the river actually did over the next 48 h stands in for the forecast. The flood warning shown is a clearly labeled re-created example, not an archived NWS product. A **lead-time box** in the replay states the backtest result: using only readings up to each moment (no look-ahead), the level reached *Danger* at 9 PM CDT on Aug 28, 2017, **75 hours (3.1 days) before the 55.19 ft crest**. With the 48-hour outlook it would be 123 hours (5.1 days), and the box says plainly that this second number is hindsight, because the 2017 NWS forecasts are not archived in the app. Readings are every 3 hours, so times are within 3 hours. "Jump to that moment" moves the slider there.
 - **"How it works · tested" panel** at the bottom of the page: the never-a-false-all-clear rule, why the level is rules-based (published NWS/FEMA thresholds) instead of AI-generated, the unit-test count, and the data sources.
 
 ## Tech (how it works)

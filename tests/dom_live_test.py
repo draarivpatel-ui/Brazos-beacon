@@ -34,7 +34,7 @@ def main():
             if k is None: return r.fulfill(status=204, body='')
             return r.fulfill(status=200, headers={'Access-Control-Allow-Origin': '*'}, content_type='application/json', body=json.dumps(fx[k]))
         pg.route('**/*', route)
-    settle = lambda pg: (pg.wait_for_function("!document.getElementById('main').hasAttribute('aria-busy') && document.getElementById('lvlNum').textContent.trim() !== '–'", timeout=20000), pg.wait_for_timeout(400))
+    settle = lambda pg: (pg.wait_for_function("!document.getElementById('main').hasAttribute('aria-busy') && document.getElementById('lvlNum').textContent.trim() !== '-'", timeout=20000), pg.wait_for_timeout(400))
     with sync_playwright() as p:
         b = D.launch(p)
         for lang, word in (('en', 'Beacon level'), ('es', 'Nivel Beacon')):

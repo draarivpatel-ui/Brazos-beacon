@@ -347,10 +347,10 @@
     } else {
       var w = d.wx;
       $('wx').innerHTML = [
-        [w.nowHI != null ? w.nowHI + '°F' : '–', t('hi_now'), w.nowHI != null && L_.heatRiskLevel(w.nowHI) > 0],
-        [w.maxHI != null ? w.maxHI + '°F' : '–', t('max_hi'), w.maxHI != null && L_.heatRiskLevel(w.maxHI) > 0],
-        [w.rain24 != null ? num(w.rain24) + ' ' + t('inch') : '–', t('rain_24'), L_.rainLevel(w.rain24) > 0],
-        [w.rain72 != null ? num(w.rain72) + ' ' + t('inch') : '–', t('rain_72'), false]
+        [w.nowHI != null ? w.nowHI + '°F' : '-', t('hi_now'), w.nowHI != null && L_.heatRiskLevel(w.nowHI) > 0],
+        [w.maxHI != null ? w.maxHI + '°F' : '-', t('max_hi'), w.maxHI != null && L_.heatRiskLevel(w.maxHI) > 0],
+        [w.rain24 != null ? num(w.rain24) + ' ' + t('inch') : '-', t('rain_24'), L_.rainLevel(w.rain24) > 0],
+        [w.rain72 != null ? num(w.rain72) + ' ' + t('inch') : '-', t('rain_72'), false]
       ].map(function (s) { return '<div class="stat' + (s[2] ? ' hot' : '') + '"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>'; }).join('');
     }
 
@@ -366,7 +366,7 @@
         var note = g.demo ? null : g.fsNote !== undefined ? g.fsNote : ft == null && g.stage != null ? 'no_fs' : null; // older snapshots lack fsNote
         var age = L_.ageHours(g.obsTime, refNow), stale = !g.demo && (age == null || age > STALE_H);
         var lines = [];
-        lines.push(esc(t('stage')) + ': <b>' + (g.stage != null ? num(g.stage) + ' ' + esc(unit(g.unit)) : '–') + '</b>' +
+        lines.push(esc(t('stage')) + ': <b>' + (g.stage != null ? num(g.stage) + ' ' + esc(unit(g.unit)) : '-') + '</b>' +
           (ft != null ? ' · ' + esc(ft > 0 ? fmt(t('below_fs'), { ft: num(ft), fs: g.cats.minor.stage }) : fmt(t('above_fs'), { ft: num(-ft), fs: g.cats.minor.stage }))
             : note === 'not_loaded' ? ' · ' + esc(t('fs_not_loaded')) : note === 'no_fs' ? ' · ' + esc(t('no_fs')) : ''));
         if (g.fstage != null) lines.push(esc(t(g.demo ? 'next48' : 'fcst_crest')) + ': ' + num(g.fstage) + ' ' + esc(unit(g.unit)) +
@@ -494,8 +494,8 @@
     out.push('<circle cx="' + px.toFixed(1) + '" cy="' + Y(peak.v).toFixed(1) + '" r="4" fill="#0b2a3c"/><text x="' + (right ? px - 8 : px + 8).toFixed(1) + '" y="' + Math.max(Y(peak.v) - 7, 14).toFixed(1) + '" text-anchor="' + (right ? 'end' : 'start') + '" font-size="12" font-weight="700" fill="#0b2a3c" paint-order="stroke" stroke="#fbfcfd" stroke-width="4">' + esc(t('peak')) + ' ' + num(peak.v) + ' ' + esc(t('ft')) + '</text>');
     svg.innerHTML = out.join('');
     var last = series.obs.length ? series.obs[series.obs.length - 1].v : null;
-    svg.setAttribute('aria-label', fmt(t('chart_aria'), { name: g.name, now: last != null ? num(last) : '–', peak: num(peak.v),
-      fs: cats && cats.minor ? cats.minor.stage : '–' }));
+    svg.setAttribute('aria-label', fmt(t('chart_aria'), { name: g.name, now: last != null ? num(last) : '-', peak: num(peak.v),
+      fs: cats && cats.minor ? cats.minor.stage : '-' }));
   }
 
   // ---------- map ----------
@@ -537,7 +537,7 @@
     quietMarker(you);
     (d.gauges || []).forEach(function (g) {
       quietMarker(L.circleMarker([g.lat, g.lon], { radius: 7, color: '#fff', weight: 2, fillColor: { no_flooding: '#1f8a4c', action: '#c99a06', minor: '#b4500f', moderate: '#b3122e', major: '#6b0018' }[g.category] || '#7a8a94', fillOpacity: 1 })
-        .addTo(layers.group).bindTooltip(esc(g.name) + ': ' + (g.stage != null ? num(g.stage) + ' ' + esc(unit('ft')) : '–'))
+        .addTo(layers.group).bindTooltip(esc(g.name) + ': ' + (g.stage != null ? num(g.stage) + ' ' + esc(unit('ft')) : '-'))
         .on('click', function (e) { L.DomEvent.stopPropagation(e); selectGauge(g.lid); }));
     });
   }
@@ -566,10 +566,10 @@
     var row = function (k, v) { return '<div class="ps-field"><b>' + esc(t(k)) + '</b><span>' + (v ? esc(v).replace(/\n/g, '<br>') : '&nbsp;') + '</span></div>'; };
     var river = p.gauge
       ? '<p><b>' + esc(fmt(t('ps_river_line'), { name: p.gauge.name, mi: num(L_.kmToMi(p.gauge.km)), fs: num(p.gauge.flood) })) + '</b><br>' +
-        esc(fmt(t('ps_stages'), { a: p.gauge.action != null ? num(p.gauge.action) : '–', m: p.gauge.moderate != null ? num(p.gauge.moderate) : '–', j: p.gauge.major != null ? num(p.gauge.major) : '–' })) +
+        esc(fmt(t('ps_stages'), { a: p.gauge.action != null ? num(p.gauge.action) : '-', m: p.gauge.moderate != null ? num(p.gauge.moderate) : '-', j: p.gauge.major != null ? num(p.gauge.major) : '-' })) +
         '<br>water.noaa.gov/gauges/' + esc(p.gauge.lid) + '</p>'
       : '<p>' + esc(t('ps_river_none')) + '</p>';
-    var lvTxt = !risk ? '–' : unsure ? t('incomplete_name') : lv + ' · ' + t('level_names')[lv];
+    var lvTxt = !risk ? '-' : unsure ? t('incomplete_name') : lv + ' · ' + t('level_names')[lv];
     $('planSheet').innerHTML =
       '<header class="ps-head"><div><p class="ps-brand">◉ Brazos Beacon</p><h1>' + esc(t('ps_title')) + '</h1>' +
         '<p>' + esc(t('ps_for')) + ': <b>' + esc(place) + '</b> (' + state.lat.toFixed(4) + ', ' + state.lon.toFixed(4) + ')<br>' +

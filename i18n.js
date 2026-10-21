@@ -91,7 +91,7 @@ window.I18N = {
       evac_ready: 'Be ready to leave. Follow county evacuation orders for your area.',
       check_neighbors: 'Check on elderly or disabled neighbors who may need a ride.',
       leave_now: 'If you are told to evacuate, leave now. If trapped by rising water, call 911 and go to the highest level (not a closed attic).',
-      water: 'Drink water before you are thirsty; avoid outdoor work 11 am – 5 pm.',
+      water: 'Drink water before you are thirsty; avoid outdoor work 11 am to 5 pm.',
       cool_place: 'Find a cool place: library, community center or mall.',
       check_elderly: 'Check twice a day on older relatives and neighbors without A/C.',
       no_kids_cars: 'Never leave kids or pets in a parked car, even for a minute.',
