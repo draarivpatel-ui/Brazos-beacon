@@ -24,7 +24,7 @@ Honest limits: live data comes from public NOAA/NWS/FEMA services and can lag, r
 
 ## Why I built this
 
-I live in Fort Bend County, where the Brazos River, the San Bernard River, and Houston-area bayous meet. During Hurricane Harvey the Brazos at Richmond crested at **55.19 ft** on Sept 1, 2017 (flood stage is 45 ft), the highest since 1915. The county ordered mandatory evacuations for neighborhoods and levee districts along the river, and its emergency office later estimated about **200,000 residents were impacted**. In the summer, extreme heat is the other everyday danger here.
+In Fort Bend County, TX, the Brazos River, the San Bernard River, and Houston-area bayous meet. During Hurricane Harvey the Brazos at Richmond crested at **55.19 ft** on Sept 1, 2017 (flood stage is 45 ft), the highest since 1915. The county ordered mandatory evacuations for neighborhoods and levee districts along the river, and its emergency office later estimated about **200,000 residents were impacted**. In the summer, extreme heat is the other everyday danger across the region.
 
 All of the data families need to stay safe is public, but during a storm it is scattered across different government sites and map viewers:
 
