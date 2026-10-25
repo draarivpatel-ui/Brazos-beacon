@@ -5,13 +5,13 @@
   --radius: 14px;
 }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scrollbar-width: thin; scrollbar-color: #b7c8d1 var(--bg); }
+html { overflow-x: clip; -webkit-text-size-adjust: 100%; scrollbar-width: thin; scrollbar-color: #b7c8d1 var(--bg); }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: #b7c8d1; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #8ea5b1; }
 ::selection { background: rgba(14, 124, 134, 0.18); color: var(--ink); }
-body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
+body { overflow-x: clip; margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
 a { color: var(--teal); }
 button { font: inherit; cursor: pointer; }
 :focus-visible { outline: 3px solid #0b2a3c; outline-offset: 2px; box-shadow: 0 0 0 2px #ffb703; }
