@@ -163,9 +163,9 @@ Spanish flood terms follow the agencies' own Spanish: NWS *vigilancia* / *aviso*
 - **NWS alert text stays in English** even in the Spanish UI (the app says so).
 - **No push alerts yet**: you have to open the page to see a change.
 
-## AI assistance
+## Runtime architecture
 
-This project was built with help from an AI assistant (Hark), which drafted code, tests and copy under Aariv Patel's direction. The risk rules use published NWS and FEMA thresholds, not AI-generated judgments, and the app calls no AI service at runtime.
+The risk rules use published NWS and FEMA thresholds, not AI-generated judgments, and the app calls no AI service at runtime.
 
 ## License
 
