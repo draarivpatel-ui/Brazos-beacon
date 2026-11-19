@@ -324,7 +324,7 @@
 
   var api = {snapshotUsable: snapshotUsable, replayAt: replayAt, replayLeadTimes: replayLeadTimes, heatIndexF: heatIndexF, heatLevel: heatLevel, heatRiskLevel: heatRiskLevel, feetToFlood: feetToFlood, gaugeFloodStatus: gaugeFloodStatus,
     forecastPeak: forecastPeak, riskGauges: riskGauges, kmToMi: kmToMi, ageHours: ageHours, valueAt: valueAt,
-    hourlyHeatIndex: hourlyHeatIndex, CAT_ORDER: CAT_ORDER, riverCategory: riverCategory, riverLevel: riverLevel,
+    hourlyHeatIndex: hourlyHeatIndex, riverCategory: riverCategory, riverLevel: riverLevel,
     alertLevel: alertLevel, alertHazard: alertHazard, overallRisk: overallRisk,
     distanceKm: distanceKm, trendFtPerHour: trendFtPerHour, floodZoneInfo: floodZoneInfo,
     parseValidTime: parseValidTime, rainInches: rainInches, rainLevel: rainLevel, buildChecklist: buildChecklist, familyPlan: familyPlan };
